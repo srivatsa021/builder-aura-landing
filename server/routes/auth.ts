@@ -117,52 +117,114 @@ export const handleSignup: RequestHandler = async (req, res) => {
       return res.status(403).json(response);
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      email: email.toLowerCase(),
-    });
+    const isMongoConnected = mongoose.connection.readyState === 1;
 
-    if (existingUser) {
+    if (isMongoConnected) {
+      // Use MongoDB
+      console.log("📦 Using MongoDB for signup");
+
+      // Check if user already exists
+      const existingUser = await User.findOne({
+        email: email.toLowerCase(),
+      });
+
+      if (existingUser) {
+        const response: AuthResponse = {
+          success: false,
+          message: "User already exists with this email",
+        };
+        return res.status(409).json(response);
+      }
+
+      // Create new user
+      const newUser = new User({
+        email: email.toLowerCase(),
+        password,
+        name,
+        phone,
+        role,
+        companyName: userData.companyName,
+        industry: userData.industry,
+        website: userData.website,
+        address: userData.address,
+        clubName: userData.clubName,
+        collegeName: userData.collegeName,
+        description: userData.description,
+      });
+
+      await newUser.save();
+
+      // Generate JWT token
+      const token = generateToken(newUser);
+
       const response: AuthResponse = {
-        success: false,
-        message: "User already exists with this email",
+        success: true,
+        token,
+        user: {
+          id: newUser._id.toString(),
+          email: newUser.email,
+          name: newUser.name,
+          role: newUser.role,
+        },
       };
-      return res.status(409).json(response);
-    }
 
-    // Create new user
-    const newUser = new User({
-      email: email.toLowerCase(),
-      password,
-      name,
-      phone,
-      role,
-      companyName: userData.companyName,
-      industry: userData.industry,
-      website: userData.website,
-      address: userData.address,
-      clubName: userData.clubName,
-      collegeName: userData.collegeName,
-      description: userData.description,
-    });
+      res.status(201).json(response);
+    } else {
+      // Use memory store fallback
+      console.log("💾 Using memory store for signup (MongoDB not connected)");
 
-    await newUser.save();
+      // Check if user already exists
+      const existingUser = await memoryStore.findUserByEmail(email);
+      if (existingUser) {
+        const response: AuthResponse = {
+          success: false,
+          message: "User already exists with this email",
+        };
+        return res.status(409).json(response);
+      }
 
-    // Generate JWT token
-    const token = generateToken(newUser);
+      // Hash password
+      const salt = await bcrypt.genSalt(12);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
-    const response: AuthResponse = {
-      success: true,
-      token,
-      user: {
-        id: newUser._id.toString(),
+      // Create new user
+      const newUser = await memoryStore.createUser({
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        name,
+        phone,
+        role,
+        isActive: true,
+        companyName: userData.companyName,
+        industry: userData.industry,
+        website: userData.website,
+        address: userData.address,
+        clubName: userData.clubName,
+        collegeName: userData.collegeName,
+        description: userData.description,
+      });
+
+      // Generate JWT token
+      const mockUser = {
+        _id: newUser._id,
         email: newUser.email,
-        name: newUser.name,
         role: newUser.role,
-      },
-    };
+      };
+      const token = generateToken(mockUser as any);
 
-    res.status(201).json(response);
+      const response: AuthResponse = {
+        success: true,
+        token,
+        user: {
+          id: newUser._id,
+          email: newUser.email,
+          name: newUser.name,
+          role: newUser.role,
+        },
+      };
+
+      res.status(201).json(response);
+    }
   } catch (error) {
     console.error("Signup error:", error);
     const response: AuthResponse = {
