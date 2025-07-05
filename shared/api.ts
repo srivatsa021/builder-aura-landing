@@ -53,3 +53,57 @@ export interface AuthResponse {
   };
   message?: string;
 }
+
+/**
+ * Event interfaces
+ */
+export interface CreateEventRequest {
+  title: string;
+  description: string;
+  eventDate: string;
+  expectedAttendees: number;
+  sponsorshipAmount: number;
+  category:
+    | "technical"
+    | "cultural"
+    | "academic"
+    | "sports"
+    | "social"
+    | "other";
+  venue: string;
+  status?: "draft" | "published";
+}
+
+export interface Event {
+  _id: string;
+  title: string;
+  description: string;
+  organizer: {
+    _id: string;
+    name: string;
+    clubName: string;
+    collegeName: string;
+  };
+  eventDate: string;
+  expectedAttendees: number;
+  sponsorshipAmount: number;
+  category: string;
+  venue: string;
+  status: "draft" | "published" | "sponsored" | "completed" | "cancelled";
+  interestedSponsors: string[];
+  brochureUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventResponse {
+  success: boolean;
+  event?: Event;
+  events?: Event[];
+  message?: string;
+}
+
+export interface InterestResponse {
+  success: boolean;
+  message?: string;
+}
