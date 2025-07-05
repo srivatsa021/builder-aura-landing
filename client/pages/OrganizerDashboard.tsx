@@ -795,6 +795,79 @@ export default function OrganizerDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Interested Sponsors Modal */}
+      <Dialog
+        open={isInterestedSponsorsOpen}
+        onOpenChange={setIsInterestedSponsorsOpen}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Interested Sponsors - {selectedEventForSponsors?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {interestedSponsors.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No sponsors have expressed interest yet
+              </p>
+            ) : (
+              interestedSponsors.map((sponsor) => (
+                <Card key={sponsor._id} className="border-l-4 border-l-primary">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-medium text-lg">
+                          {sponsor.companyName}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {sponsor.industry}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Contact: {sponsor.name} • {sponsor.phone}
+                        </p>
+                        {sponsor.website && (
+                          <a
+                            href={sponsor.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary text-sm hover:underline"
+                          >
+                            Visit Website
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            handleRespondToSponsor(sponsor._id, "accept")
+                          }
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Accept & Assign Agent
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleRespondToSponsor(sponsor._id, "decline")
+                          }
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Decline
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
