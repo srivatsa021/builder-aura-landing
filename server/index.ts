@@ -36,16 +36,25 @@ export function createServer() {
 
   // Public routes
   app.get("/api/ping", (_req, res) => {
-    const mongoose = require("mongoose");
-    const dbStatus =
-      mongoose.connection.readyState === 1
-        ? "MongoDB connected"
-        : "Using memory store";
-    res.json({
-      message: "SponsorHub API v1.0",
-      database: dbStatus,
-      stats: memoryStore.getStats(),
-    });
+    import("mongoose")
+      .then((mongoose) => {
+        const dbStatus =
+          mongoose.connection.readyState === 1
+            ? "MongoDB connected"
+            : "Using memory store";
+        res.json({
+          message: "SponsorHub API v1.0",
+          database: dbStatus,
+          stats: memoryStore.getStats(),
+        });
+      })
+      .catch(() => {
+        res.json({
+          message: "SponsorHub API v1.0",
+          database: "Using memory store",
+          stats: memoryStore.getStats(),
+        });
+      });
   });
 
   app.get("/api/demo", handleDemo);
