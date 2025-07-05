@@ -9,6 +9,7 @@ import {
   handleGetProfile,
 } from "./routes/auth";
 import { authenticateToken } from "./middleware/auth";
+import { memoryStore } from "./database/memory-store";
 
 export function createServer() {
   const app = express();
