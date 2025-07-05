@@ -13,8 +13,20 @@ import { authenticateToken } from "./middleware/auth";
 export function createServer() {
   const app = express();
 
-  // Connect to MongoDB
-  connectToDatabase().catch(console.error);
+  // Connect to MongoDB (non-blocking)
+  connectToDatabase().catch((error) => {
+    console.error(
+      "⚠️ Failed to connect to MongoDB. Some features may not work:",
+      error.message,
+    );
+    console.log("💡 To fix this:");
+    console.log(
+      "   1. Install MongoDB locally: https://docs.mongodb.com/manual/installation/",
+    );
+    console.log(
+      "   2. Or update MONGODB_URI in .env with MongoDB Atlas connection string",
+    );
+  });
 
   // Middleware
   app.use(cors());
