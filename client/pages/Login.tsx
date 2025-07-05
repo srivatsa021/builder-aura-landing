@@ -48,8 +48,19 @@ export default function Login() {
 
         alert("Login successful! Welcome back!");
         // Redirect to appropriate dashboard based on role
-        // For now, redirect to home
-        window.location.href = "/";
+        switch (selectedRole) {
+          case "sponsor":
+            window.location.href = "/sponsor-dashboard";
+            break;
+          case "organizer":
+            window.location.href = "/organizer-dashboard";
+            break;
+          case "agent":
+            window.location.href = "/agent-dashboard";
+            break;
+          default:
+            window.location.href = "/";
+        }
       } else {
         alert(result.message || "Login failed. Please check your credentials.");
       }

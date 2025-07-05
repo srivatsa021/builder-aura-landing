@@ -1,0 +1,668 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Plus,
+  Calendar,
+  Users,
+  DollarSign,
+  MapPin,
+  Building2,
+  Bell,
+  Eye,
+  Edit,
+  Trash2,
+  Upload,
+  Check,
+  X,
+} from "lucide-react";
+
+interface Event {
+  _id: string;
+  title: string;
+  description: string;
+  eventDate: string;
+  expectedAttendees: number;
+  sponsorshipAmount: number;
+  category: string;
+  venue: string;
+  status: "draft" | "published" | "sponsored" | "completed";
+  interestedSponsors: number;
+}
+
+interface Sponsor {
+  _id: string;
+  companyName: string;
+  industry: string;
+  website?: string;
+  contactPerson: string;
+  status: "open" | "busy";
+  lastActive: string;
+}
+
+interface Notification {
+  _id: string;
+  type: "sponsor_interest";
+  message: string;
+  eventTitle: string;
+  sponsorName: string;
+  timestamp: string;
+  read: boolean;
+}
+
+export default function OrganizerDashboard() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [isEventFormOpen, setIsEventFormOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(null);
+
+  // Event form state
+  const [eventForm, setEventForm] = useState({
+    title: "",
+    description: "",
+    eventDate: "",
+    expectedAttendees: "",
+    sponsorshipAmount: "",
+    category: "",
+    venue: "",
+  });
+
+  useEffect(() => {
+    // Get user info
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
+    // Load data (mock data for now)
+    setEvents([
+      {
+        _id: "1",
+        title: "Tech Innovation Workshop",
+        description: "Workshop on emerging technologies and innovation",
+        eventDate: "2024-03-20",
+        expectedAttendees: 500,
+        sponsorshipAmount: 150000,
+        category: "technical",
+        venue: "Main Auditorium",
+        status: "published",
+        interestedSponsors: 3,
+      },
+      {
+        _id: "2",
+        title: "Cultural Night 2024",
+        description: "Annual cultural celebration with performances",
+        eventDate: "2024-04-15",
+        expectedAttendees: 800,
+        sponsorshipAmount: 200000,
+        category: "cultural",
+        venue: "Open Air Theater",
+        status: "draft",
+        interestedSponsors: 0,
+      },
+    ]);
+
+    setSponsors([
+      {
+        _id: "1",
+        companyName: "Tech Innovators Pvt Ltd",
+        industry: "Technology",
+        website: "https://techinnovators.com",
+        contactPerson: "John Smith",
+        status: "open",
+        lastActive: "2024-01-10",
+      },
+      {
+        _id: "2",
+        companyName: "Green Energy Solutions",
+        industry: "Renewable Energy",
+        contactPerson: "Sarah Johnson",
+        status: "open",
+        lastActive: "2024-01-08",
+      },
+      {
+        _id: "3",
+        companyName: "Digital Marketing Hub",
+        industry: "Marketing",
+        website: "https://digitalmarketing.com",
+        contactPerson: "Mike Wilson",
+        status: "busy",
+        lastActive: "2024-01-05",
+      },
+    ]);
+
+    setNotifications([
+      {
+        _id: "1",
+        type: "sponsor_interest",
+        message: "Tech Innovators Pvt Ltd has expressed interest in your event",
+        eventTitle: "Tech Innovation Workshop",
+        sponsorName: "Tech Innovators Pvt Ltd",
+        timestamp: "2024-01-10T10:30:00Z",
+        read: false,
+      },
+      {
+        _id: "2",
+        type: "sponsor_interest",
+        message: "Green Energy Solutions wants to sponsor your event",
+        eventTitle: "Tech Innovation Workshop",
+        sponsorName: "Green Energy Solutions",
+        timestamp: "2024-01-09T15:45:00Z",
+        read: false,
+      },
+    ]);
+  }, []);
+
+  const handleEventSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement API call to create/update event
+    console.log("Event form data:", eventForm);
+    setIsEventFormOpen(false);
+    setEventForm({
+      title: "",
+      description: "",
+      eventDate: "",
+      expectedAttendees: "",
+      sponsorshipAmount: "",
+      category: "",
+      venue: "",
+    });
+    alert("Event saved successfully!");
+  };
+
+  const handleNotificationResponse = (
+    notificationId: string,
+    action: "accept" | "decline",
+  ) => {
+    // TODO: Implement API call to respond to sponsor interest
+    console.log(`${action} notification:`, notificationId);
+
+    if (action === "accept") {
+      alert(
+        "Interest accepted! An agent will be assigned to mediate the deal.",
+      );
+    } else {
+      alert("Interest declined.");
+    }
+
+    // Remove notification from list
+    setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
+    setIsNotificationOpen(false);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      draft: "bg-gray-500",
+      published: "bg-blue-500",
+      sponsored: "bg-green-500",
+      completed: "bg-purple-500",
+    };
+    return colors[status as keyof typeof colors] || "bg-gray-500";
+  };
+
+  const unreadNotifications = notifications.filter((n) => !n.read).length;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-background/95 backdrop-blur">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Users className="h-6 w-6 text-primary" />
+            <div>
+              <h1 className="text-lg font-semibold">Organizer Dashboard</h1>
+              <p className="text-sm text-muted-foreground">
+                {user?.clubName}, {user?.collegeName}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            {/* Notifications */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsNotificationOpen(true)}
+              className="relative"
+            >
+              <Bell className="h-4 w-4" />
+              {unreadNotifications > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  {unreadNotifications}
+                </Badge>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => (window.location.href = "/")}
+            >
+              Back to Home
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex">
+        {/* Side Panel */}
+        <aside className="w-80 border-r bg-muted/30 min-h-[calc(100vh-64px)]">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">Event Management</h2>
+              <Button onClick={() => setIsEventFormOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Event
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="p-4">
+                  <h3 className="font-medium mb-2">Quick Stats</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Total Events
+                      </span>
+                      <span>{events.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Published</span>
+                      <span>
+                        {events.filter((e) => e.status === "published").length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Interest Received
+                      </span>
+                      <span>
+                        {events.reduce(
+                          (sum, e) => sum + e.interestedSponsors,
+                          0,
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div>
+                <h3 className="font-medium mb-3">Available Sponsors</h3>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {sponsors.map((sponsor) => (
+                    <Card key={sponsor._id} className="text-sm">
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-medium line-clamp-1">
+                            {sponsor.companyName}
+                          </h4>
+                          <Badge
+                            variant={
+                              sponsor.status === "open"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {sponsor.status}
+                          </Badge>
+                        </div>
+                        <p className="text-muted-foreground text-xs mb-1">
+                          {sponsor.industry}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          Contact: {sponsor.contactPerson}
+                        </p>
+                        {sponsor.website && (
+                          <a
+                            href={sponsor.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary text-xs hover:underline block mt-1"
+                          >
+                            Visit Website
+                          </a>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 p-6">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold mb-2">Your Events</h2>
+            <p className="text-muted-foreground">
+              Manage your events and track sponsorship opportunities
+            </p>
+          </div>
+
+          {/* Events Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {events.map((event) => (
+              <Card
+                key={event._id}
+                className="hover:shadow-lg transition-shadow"
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg mb-2">
+                        {event.title}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge
+                          className={`${getStatusColor(event.status)} text-white`}
+                        >
+                          {event.status}
+                        </Badge>
+                        {event.interestedSponsors > 0 && (
+                          <Badge variant="outline">
+                            {event.interestedSponsors} interested
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <p className="text-sm line-clamp-2">{event.description}</p>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {formatDate(event.eventDate)}
+                    </div>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Users className="h-4 w-4 mr-2" />
+                      {event.expectedAttendees.toLocaleString()} attendees
+                    </div>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      {event.venue}
+                    </div>
+                    <div className="flex items-center text-sm font-semibold text-primary">
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      {formatCurrency(event.sponsorshipAmount)}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Eye className="h-4 w-4 mr-2" />
+                      View
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </main>
+      </div>
+
+      {/* New Event Form Modal */}
+      <Dialog open={isEventFormOpen} onOpenChange={setIsEventFormOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Event</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEventSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Event Title *</Label>
+                <Input
+                  id="title"
+                  value={eventForm.title}
+                  onChange={(e) =>
+                    setEventForm({ ...eventForm, title: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Category *</Label>
+                <Select
+                  value={eventForm.category}
+                  onValueChange={(value) =>
+                    setEventForm({ ...eventForm, category: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="technical">Technical</SelectItem>
+                    <SelectItem value="cultural">Cultural</SelectItem>
+                    <SelectItem value="academic">Academic</SelectItem>
+                    <SelectItem value="sports">Sports</SelectItem>
+                    <SelectItem value="social">Social</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                value={eventForm.description}
+                onChange={(e) =>
+                  setEventForm({ ...eventForm, description: e.target.value })
+                }
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="eventDate">Event Date *</Label>
+                <Input
+                  id="eventDate"
+                  type="date"
+                  value={eventForm.eventDate}
+                  onChange={(e) =>
+                    setEventForm({ ...eventForm, eventDate: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="venue">Venue *</Label>
+                <Input
+                  id="venue"
+                  value={eventForm.venue}
+                  onChange={(e) =>
+                    setEventForm({ ...eventForm, venue: e.target.value })
+                  }
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="expectedAttendees">Expected Attendees *</Label>
+                <Input
+                  id="expectedAttendees"
+                  type="number"
+                  value={eventForm.expectedAttendees}
+                  onChange={(e) =>
+                    setEventForm({
+                      ...eventForm,
+                      expectedAttendees: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sponsorshipAmount">
+                  Sponsorship Amount (₹) *
+                </Label>
+                <Input
+                  id="sponsorshipAmount"
+                  type="number"
+                  value={eventForm.sponsorshipAmount}
+                  onChange={(e) =>
+                    setEventForm({
+                      ...eventForm,
+                      sponsorshipAmount: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="brochure">Event Brochure (PDF)</Label>
+              <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Click to upload or drag and drop
+                </p>
+                <p className="text-xs text-muted-foreground">PDF files only</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <Button type="submit" className="flex-1">
+                Create Event
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEventFormOpen(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notifications Modal */}
+      <Dialog open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sponsor Interest Notifications</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {notifications.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No new notifications
+              </p>
+            ) : (
+              notifications.map((notification) => (
+                <Card
+                  key={notification._id}
+                  className="border-l-4 border-l-primary"
+                >
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-medium">
+                          {notification.sponsorName}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Interested in: {notification.eventTitle}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(notification.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+
+                      <p className="text-sm">{notification.message}</p>
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            handleNotificationResponse(
+                              notification._id,
+                              "accept",
+                            )
+                          }
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Accept
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleNotificationResponse(
+                              notification._id,
+                              "decline",
+                            )
+                          }
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Decline
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
