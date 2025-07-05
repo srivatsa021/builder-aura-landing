@@ -43,6 +43,9 @@ export default function SponsorDashboard() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [interestedEvents, setInterestedEvents] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     // Get user info
@@ -115,6 +118,8 @@ export default function SponsorDashboard() {
       const result = await response.json();
       if (result.success) {
         alert("Interest expressed! The organizer will be notified.");
+        // Add to interested events list
+        setInterestedEvents((prev) => new Set([...prev, eventId]));
       } else {
         alert(result.message || "Failed to express interest");
       }
@@ -245,9 +250,17 @@ export default function SponsorDashboard() {
                   <Button
                     size="sm"
                     onClick={() => handleExpressInterest(event._id)}
+                    disabled={interestedEvents.has(event._id)}
+                    variant={
+                      interestedEvents.has(event._id) ? "secondary" : "default"
+                    }
                   >
-                    <Heart className="h-4 w-4 mr-2" />
-                    Interested
+                    <Heart
+                      className={`h-4 w-4 mr-2 ${interestedEvents.has(event._id) ? "fill-current" : ""}`}
+                    />
+                    {interestedEvents.has(event._id)
+                      ? "Interested ✓"
+                      : "Express Interest"}
                   </Button>
                 </div>
               </CardContent>
@@ -414,9 +427,19 @@ export default function SponsorDashboard() {
                         handleExpressInterest(selectedEvent._id);
                         setIsModalOpen(false);
                       }}
+                      disabled={interestedEvents.has(selectedEvent._id)}
+                      variant={
+                        interestedEvents.has(selectedEvent._id)
+                          ? "secondary"
+                          : "default"
+                      }
                     >
-                      <Heart className="h-4 w-4 mr-2" />
-                      Express Interest
+                      <Heart
+                        className={`h-4 w-4 mr-2 ${interestedEvents.has(selectedEvent._id) ? "fill-current" : ""}`}
+                      />
+                      {interestedEvents.has(selectedEvent._id)
+                        ? "Interest Expressed ✓"
+                        : "Express Interest"}
                     </Button>
                     <Button
                       variant="outline"
