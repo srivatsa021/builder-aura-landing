@@ -9,11 +9,19 @@ export async function connectToDatabase() {
       return mongoose.connection;
     }
 
-    const connection = await mongoose.connect(MONGODB_URI);
+    console.log("🔄 Attempting to connect to MongoDB:", MONGODB_URI);
+
+    const connection = await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    });
+
     console.log("📦 Connected to MongoDB:", connection.connection.host);
     return connection;
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
+    console.log(
+      "💡 Note: Make sure MongoDB is running locally or update MONGODB_URI for cloud database",
+    );
     throw error;
   }
 }
