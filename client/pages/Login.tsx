@@ -22,8 +22,41 @@ export default function Login() {
     e.preventDefault();
     if (!selectedRole) return;
 
-    // TODO: Implement login logic
-    console.log("Login:", { email, password, role: selectedRole });
+    try {
+      const loginData = {
+        email,
+        password,
+        role: selectedRole,
+      };
+
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(loginData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Store token in localStorage
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+          localStorage.setItem("user", JSON.stringify(result.user));
+        }
+
+        alert("Login successful! Welcome back!");
+        // Redirect to appropriate dashboard based on role
+        // For now, redirect to home
+        window.location.href = "/";
+      } else {
+        alert(result.message || "Login failed. Please check your credentials.");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Network error. Please check your connection and try again.");
+    }
   };
 
   return (
