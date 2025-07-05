@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken, extractTokenFromHeader, JWTPayload } from "../utils/jwt";
 import { User } from "../database/models/User";
+import { memoryStore } from "../database/memory-store";
+import mongoose from "mongoose";
 
 export interface AuthenticatedRequest extends Request {
   user?: JWTPayload & { _id: string };
@@ -31,7 +33,15 @@ export async function authenticateToken(
     }
 
     // Verify user still exists and is active
-    const user = await User.findById(decoded.userId).select("-password");
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    let user;
+
+    if (isMongoConnected) {
+      user = await User.findById(decoded.userId).select("-password");
+    } else {
+      user = await memoryStore.findUserById(decoded.userId);
+    }
+
     if (!user || !user.isActive) {
       res
         .status(401)
