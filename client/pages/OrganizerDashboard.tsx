@@ -236,10 +236,15 @@ export default function OrganizerDashboard() {
 
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event);
+    // Format date to YYYY-MM-DD for input field
+    const formattedDate = event.eventDate.includes("T")
+      ? event.eventDate.split("T")[0]
+      : event.eventDate.split(" ")[0] || event.eventDate;
+
     setEventForm({
       title: event.title,
       description: event.description,
-      eventDate: event.eventDate,
+      eventDate: formattedDate,
       expectedAttendees: event.expectedAttendees.toString(),
       sponsorshipAmount: event.sponsorshipAmount.toString(),
       category: event.category,
