@@ -51,63 +51,51 @@ export default function SponsorDashboard() {
       setUser(JSON.parse(storedUser));
     }
 
-    // Load events (mock data for now)
-    setEvents([
-      {
-        _id: "1",
-        title: "TechFest 2024",
-        description:
-          "Annual technical festival featuring hackathons, coding competitions, workshops, and tech talks by industry experts. Expected participation from 15+ colleges across the region.",
-        organizer: {
-          name: "Rajesh Kumar",
-          clubName: "Computer Science Society",
-          collegeName: "IIT Mumbai",
-        },
-        eventDate: "2024-03-15",
-        expectedAttendees: 2000,
-        sponsorshipAmount: 500000,
-        category: "technical",
-        venue: "IIT Mumbai Campus",
-        brochureUrl: "/docs/techfest-brochure.pdf",
-        status: "published",
-      },
-      {
-        _id: "2",
-        title: "Cultural Carnival",
-        description:
-          "Three-day cultural extravaganza with dance competitions, music concerts, drama performances, and art exhibitions.",
-        organizer: {
-          name: "Priya Sharma",
-          clubName: "Cultural Committee",
-          collegeName: "Delhi University",
-        },
-        eventDate: "2024-02-20",
-        expectedAttendees: 1500,
-        sponsorshipAmount: 300000,
-        category: "cultural",
-        venue: "DU Arts Auditorium",
-        brochureUrl: "/docs/cultural-carnival-brochure.pdf",
-        status: "published",
-      },
-      {
-        _id: "3",
-        title: "Innovation Summit",
-        description:
-          "Startup pitching event, innovation workshops, and networking sessions with entrepreneurs and investors.",
-        organizer: {
-          name: "Arjun Patel",
-          clubName: "Entrepreneurship Cell",
-          collegeName: "NIT Trichy",
-        },
-        eventDate: "2024-04-10",
-        expectedAttendees: 1000,
-        sponsorshipAmount: 400000,
-        category: "academic",
-        venue: "NIT Trichy Convention Center",
-        status: "published",
-      },
-    ]);
+    // Load real events from API
+    loadEvents();
   }, []);
+
+  const loadEvents = async () => {
+    try {
+      const response = await fetch("/api/events");
+      const result = await response.json();
+
+      if (result.success) {
+        // Transform data to match interface
+        const transformedEvents = result.events.map((event: any) => ({
+          _id: event._id,
+          title: event.title,
+          description: event.description,
+          organizer: {
+            name:
+              event.organizer?.name ||
+              event.organizer.organizer?.name ||
+              "Event Organizer",
+            clubName:
+              event.organizer?.clubName ||
+              event.organizer.organizer?.clubName ||
+              "Club",
+            collegeName:
+              event.organizer?.collegeName ||
+              event.organizer.organizer?.collegeName ||
+              "College",
+          },
+          eventDate: event.eventDate,
+          expectedAttendees: event.expectedAttendees,
+          sponsorshipAmount: event.sponsorshipAmount,
+          category: event.category,
+          venue: event.venue,
+          brochureUrl: event.brochureUrl,
+          status: event.status,
+        }));
+        setEvents(transformedEvents);
+      } else {
+        console.error("Failed to load events:", result.message);
+      }
+    } catch (error) {
+      console.error("Error loading events:", error);
+    }
+  };
 
   const handleViewDetails = (event: Event) => {
     setSelectedEvent(event);
@@ -116,10 +104,23 @@ export default function SponsorDashboard() {
 
   const handleExpressInterest = async (eventId: string) => {
     try {
-      // TODO: Implement API call to express interest
-      alert("Interest expressed! The organizer will be notified.");
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/events/${eventId}/interest`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert("Interest expressed! The organizer will be notified.");
+      } else {
+        alert(result.message || "Failed to express interest");
+      }
     } catch (error) {
-      alert("Failed to express interest. Please try again.");
+      console.error("Error expressing interest:", error);
+      alert("Network error. Please try again.");
     }
   };
 

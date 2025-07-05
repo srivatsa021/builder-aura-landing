@@ -9,6 +9,14 @@ import {
   handleLogout,
   handleGetProfile,
 } from "./routes/auth";
+import {
+  handleGetEvents,
+  handleGetOrganizerEvents,
+  handleCreateEvent,
+  handleExpressInterest,
+  handleGetSponsors,
+  eventMemoryStore,
+} from "./routes/events";
 import { authenticateToken } from "./middleware/auth";
 import { memoryStore } from "./database/memory-store";
 
@@ -44,7 +52,10 @@ export function createServer() {
     res.json({
       message: "SponsorHub API v1.0",
       database: dbStatus,
-      stats: memoryStore.getStats(),
+      stats: {
+        users: memoryStore.getStats(),
+        events: eventMemoryStore.getStats(),
+      },
     });
   });
 
@@ -57,6 +68,17 @@ export function createServer() {
 
   // Protected routes (require authentication)
   app.get("/api/auth/profile", authenticateToken, handleGetProfile);
+
+  // Event routes
+  app.get("/api/events", handleGetEvents);
+  app.get("/api/events/organizer", authenticateToken, handleGetOrganizerEvents);
+  app.post("/api/events", authenticateToken, handleCreateEvent);
+  app.post(
+    "/api/events/:eventId/interest",
+    authenticateToken,
+    handleExpressInterest,
+  );
+  app.get("/api/sponsors", handleGetSponsors);
 
   // Health check with database status
   app.get("/api/health", async (_req, res) => {

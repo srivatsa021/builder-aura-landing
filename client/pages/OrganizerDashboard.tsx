@@ -102,100 +102,97 @@ export default function OrganizerDashboard() {
       setUser(JSON.parse(storedUser));
     }
 
-    // Load data (mock data for now)
-    setEvents([
-      {
-        _id: "1",
-        title: "Tech Innovation Workshop",
-        description: "Workshop on emerging technologies and innovation",
-        eventDate: "2024-03-20",
-        expectedAttendees: 500,
-        sponsorshipAmount: 150000,
-        category: "technical",
-        venue: "Main Auditorium",
-        status: "published",
-        interestedSponsors: 3,
-      },
-      {
-        _id: "2",
-        title: "Cultural Night 2024",
-        description: "Annual cultural celebration with performances",
-        eventDate: "2024-04-15",
-        expectedAttendees: 800,
-        sponsorshipAmount: 200000,
-        category: "cultural",
-        venue: "Open Air Theater",
-        status: "draft",
-        interestedSponsors: 0,
-      },
-    ]);
-
-    setSponsors([
-      {
-        _id: "1",
-        companyName: "Tech Innovators Pvt Ltd",
-        industry: "Technology",
-        website: "https://techinnovators.com",
-        contactPerson: "John Smith",
-        status: "open",
-        lastActive: "2024-01-10",
-      },
-      {
-        _id: "2",
-        companyName: "Green Energy Solutions",
-        industry: "Renewable Energy",
-        contactPerson: "Sarah Johnson",
-        status: "open",
-        lastActive: "2024-01-08",
-      },
-      {
-        _id: "3",
-        companyName: "Digital Marketing Hub",
-        industry: "Marketing",
-        website: "https://digitalmarketing.com",
-        contactPerson: "Mike Wilson",
-        status: "busy",
-        lastActive: "2024-01-05",
-      },
-    ]);
-
-    setNotifications([
-      {
-        _id: "1",
-        type: "sponsor_interest",
-        message: "Tech Innovators Pvt Ltd has expressed interest in your event",
-        eventTitle: "Tech Innovation Workshop",
-        sponsorName: "Tech Innovators Pvt Ltd",
-        timestamp: "2024-01-10T10:30:00Z",
-        read: false,
-      },
-      {
-        _id: "2",
-        type: "sponsor_interest",
-        message: "Green Energy Solutions wants to sponsor your event",
-        eventTitle: "Tech Innovation Workshop",
-        sponsorName: "Green Energy Solutions",
-        timestamp: "2024-01-09T15:45:00Z",
-        read: false,
-      },
-    ]);
+    // Load real data from API
+    loadEvents();
+    loadSponsors();
   }, []);
 
-  const handleEventSubmit = (e: React.FormEvent) => {
+  const loadEvents = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/events/organizer", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Transform data to match interface
+        const transformedEvents = result.events.map((event: any) => ({
+          _id: event._id,
+          title: event.title,
+          description: event.description,
+          eventDate: event.eventDate,
+          expectedAttendees: event.expectedAttendees,
+          sponsorshipAmount: event.sponsorshipAmount,
+          category: event.category,
+          venue: event.venue,
+          status: event.status,
+          interestedSponsors: event.interestedSponsors?.length || 0,
+        }));
+        setEvents(transformedEvents);
+      } else {
+        console.error("Failed to load events:", result.message);
+      }
+    } catch (error) {
+      console.error("Error loading events:", error);
+    }
+  };
+
+  const loadSponsors = async () => {
+    try {
+      const response = await fetch("/api/sponsors");
+      const result = await response.json();
+      if (result.success) {
+        setSponsors(result.sponsors);
+      } else {
+        console.error("Failed to load sponsors:", result.message);
+      }
+    } catch (error) {
+      console.error("Error loading sponsors:", error);
+    }
+  };
+
+  const handleEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement API call to create/update event
-    console.log("Event form data:", eventForm);
-    setIsEventFormOpen(false);
-    setEventForm({
-      title: "",
-      description: "",
-      eventDate: "",
-      expectedAttendees: "",
-      sponsorshipAmount: "",
-      category: "",
-      venue: "",
-    });
-    alert("Event saved successfully!");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...eventForm,
+          status: "published", // Publish immediately
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert("Event created successfully!");
+        setIsEventFormOpen(false);
+        setEventForm({
+          title: "",
+          description: "",
+          eventDate: "",
+          expectedAttendees: "",
+          sponsorshipAmount: "",
+          category: "",
+          venue: "",
+        });
+        // Reload events to show the new one
+        loadEvents();
+      } else {
+        alert(result.message || "Failed to create event");
+      }
+    } catch (error) {
+      console.error("Error creating event:", error);
+      alert("Network error. Please try again.");
+    }
   };
 
   const handleNotificationResponse = (
