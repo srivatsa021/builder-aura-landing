@@ -3,6 +3,9 @@ import { LoginRequest, SignupRequest, AuthResponse } from "@shared/api";
 import { User } from "../database/models/User";
 import { generateToken } from "../utils/jwt";
 import { AuthenticatedRequest } from "../middleware/auth";
+import { memoryStore } from "../database/memory-store";
+import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
 export const handleLogin: RequestHandler = async (req, res) => {
   try {
