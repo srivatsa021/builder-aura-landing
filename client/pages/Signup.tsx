@@ -47,8 +47,50 @@ export default function Signup() {
       return;
     }
 
-    // TODO: Implement signup logic
-    console.log("Signup:", { ...formData, role: selectedRole });
+    try {
+      const signupData = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        role: selectedRole,
+        companyName: formData.companyName,
+        industry: formData.industry,
+        website: formData.website,
+        address: formData.address,
+        clubName: formData.clubName,
+        collegeName: formData.collegeName,
+        description: formData.description,
+      };
+
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signupData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Store token in localStorage
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+          localStorage.setItem("user", JSON.stringify(result.user));
+        }
+
+        alert("Account created successfully! Welcome to SponsorHub!");
+        // Redirect to appropriate dashboard based on role
+        // For now, redirect to home
+        window.location.href = "/";
+      } else {
+        alert(result.message || "Signup failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      alert("Network error. Please check your connection and try again.");
+    }
   };
 
   const renderRoleSpecificFields = () => {
