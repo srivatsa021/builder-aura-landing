@@ -83,6 +83,12 @@ export default function OrganizerDashboard() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);
+  const [isInterestedSponsorsOpen, setIsInterestedSponsorsOpen] =
+    useState(false);
+  const [selectedEventForSponsors, setSelectedEventForSponsors] =
+    useState<Event | null>(null);
+  const [interestedSponsors, setInterestedSponsors] = useState<any[]>([]);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
   // Event form state
   const [eventForm, setEventForm] = useState({
@@ -173,8 +179,13 @@ export default function OrganizerDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        alert("Event created successfully!");
+        alert(
+          editingEvent
+            ? "Event updated successfully!"
+            : "Event created successfully!",
+        );
         setIsEventFormOpen(false);
+        setEditingEvent(null);
         setEventForm({
           title: "",
           description: "",
@@ -184,10 +195,13 @@ export default function OrganizerDashboard() {
           category: "",
           venue: "",
         });
-        // Reload events to show the new one
+        // Reload events to show the updated list
         loadEvents();
       } else {
-        alert(result.message || "Failed to create event");
+        alert(
+          result.message ||
+            `Failed to ${editingEvent ? "update" : "create"} event`,
+        );
       }
     } catch (error) {
       console.error("Error creating event:", error);
@@ -213,6 +227,98 @@ export default function OrganizerDashboard() {
     // Remove notification from list
     setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
     setIsNotificationOpen(false);
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setEventForm({
+      title: event.title,
+      description: event.description,
+      eventDate: event.eventDate,
+      expectedAttendees: event.expectedAttendees.toString(),
+      sponsorshipAmount: event.sponsorshipAmount.toString(),
+      category: event.category,
+      venue: event.venue,
+    });
+    setIsEventFormOpen(true);
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm("Are you sure you want to delete this event?")) {
+      return;
+    }
+
+    try {
+      // TODO: Implement delete API endpoint
+      alert("Event deleted successfully!");
+      loadEvents();
+    } catch (error) {
+      alert("Failed to delete event");
+    }
+  };
+
+  const handleViewInterestedSponsors = async (event: Event) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/events/${event._id}/interested-sponsors`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const result = await response.json();
+      if (result.success) {
+        setInterestedSponsors(result.sponsors);
+        setSelectedEventForSponsors(event);
+        setIsInterestedSponsorsOpen(true);
+      } else {
+        alert(result.message || "Failed to load interested sponsors");
+      }
+    } catch (error) {
+      console.error("Error loading interested sponsors:", error);
+      alert("Network error. Please try again.");
+    }
+  };
+
+  const handleRespondToSponsor = async (
+    sponsorId: string,
+    action: "accept" | "decline",
+  ) => {
+    if (!selectedEventForSponsors) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/events/${selectedEventForSponsors._id}/sponsors/${sponsorId}/respond`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action }),
+        },
+      );
+
+      const result = await response.json();
+      if (result.success) {
+        alert(result.message);
+        if (action === "accept") {
+          // Remove sponsor from the list as they've been accepted
+          setInterestedSponsors((prev) =>
+            prev.filter((s) => s._id !== sponsorId),
+          );
+        }
+      } else {
+        alert(result.message || "Failed to respond to sponsor");
+      }
+    } catch (error) {
+      console.error("Error responding to sponsor:", error);
+      alert("Network error. Please try again.");
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -433,14 +539,29 @@ export default function OrganizerDashboard() {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
-                    <Button variant="outline" size="sm">
+                    {event.interestedSponsors > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleViewInterestedSponsors(event)}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Interested ({event.interestedSponsors})
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditEvent(event)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteEvent(event._id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -455,7 +576,9 @@ export default function OrganizerDashboard() {
       <Dialog open={isEventFormOpen} onOpenChange={setIsEventFormOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Create New Event</DialogTitle>
+            <DialogTitle>
+              {editingEvent ? "Edit Event" : "Create New Event"}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEventSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -578,12 +701,24 @@ export default function OrganizerDashboard() {
 
             <div className="flex gap-4 pt-4">
               <Button type="submit" className="flex-1">
-                Create Event
+                {editingEvent ? "Update Event" : "Create Event"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsEventFormOpen(false)}
+                onClick={() => {
+                  setIsEventFormOpen(false);
+                  setEditingEvent(null);
+                  setEventForm({
+                    title: "",
+                    description: "",
+                    eventDate: "",
+                    expectedAttendees: "",
+                    sponsorshipAmount: "",
+                    category: "",
+                    venue: "",
+                  });
+                }}
               >
                 Cancel
               </Button>

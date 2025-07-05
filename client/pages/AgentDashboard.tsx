@@ -73,137 +73,137 @@ export default function AgentDashboard() {
       setUser(JSON.parse(storedUser));
     }
 
-    // Load deals (mock data for now)
-    setDeals([
-      {
-        _id: "1",
-        event: {
-          title: "TechFest 2024",
-          eventDate: "2024-03-15",
-          organizer: "Rajesh Kumar",
-          college: "IIT Mumbai",
-        },
-        sponsor: {
-          companyName: "Tech Innovators Pvt Ltd",
-          contactPerson: "John Smith",
-        },
-        proposedAmount: 500000,
-        currentAmount: 450000,
-        status: "negotiating",
-        assignedDate: "2024-01-08",
-        lastActivity: "2024-01-10",
-      },
-      {
-        _id: "2",
-        event: {
-          title: "Cultural Carnival",
-          eventDate: "2024-02-20",
-          organizer: "Priya Sharma",
-          college: "Delhi University",
-        },
-        sponsor: {
-          companyName: "Green Energy Solutions",
-          contactPerson: "Sarah Johnson",
-        },
-        proposedAmount: 300000,
-        status: "pending",
-        assignedDate: "2024-01-10",
-        lastActivity: "2024-01-10",
-      },
-      {
-        _id: "3",
-        event: {
-          title: "Innovation Summit",
-          eventDate: "2024-04-10",
-          organizer: "Arjun Patel",
-          college: "NIT Trichy",
-        },
-        sponsor: {
-          companyName: "Digital Marketing Hub",
-          contactPerson: "Mike Wilson",
-        },
-        proposedAmount: 400000,
-        currentAmount: 400000,
-        status: "approved",
-        assignedDate: "2024-01-05",
-        lastActivity: "2024-01-09",
-      },
-    ]);
+    // Load real deals from API
+    loadDeals();
   }, []);
 
-  const handleOpenChat = (deal: Deal) => {
-    setSelectedDeal(deal);
-    setIsChatOpen(true);
+  const loadDeals = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/deals/agent", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    // Load chat messages for this deal (mock data)
-    setChatMessages([
-      {
-        _id: "1",
-        from: "sponsor",
-        message:
-          "We're interested in sponsoring this event. Can we discuss the sponsorship package details?",
-        timestamp: "2024-01-08T10:00:00Z",
-      },
-      {
-        _id: "2",
-        from: "organizer",
-        message:
-          "Great! We have different sponsorship tiers available. The premium package includes logo placement, booth space, and speaking opportunities.",
-        timestamp: "2024-01-08T11:30:00Z",
-      },
-      {
-        _id: "3",
-        from: "agent",
-        message:
-          "Hello both! I'm assigned as your deal mediator. Let's discuss the terms and find a mutually beneficial agreement.",
-        timestamp: "2024-01-08T14:00:00Z",
-      },
-      {
-        _id: "4",
-        from: "sponsor",
-        message:
-          "The proposed amount seems high. Can we negotiate to ₹4,50,000?",
-        timestamp: "2024-01-09T09:15:00Z",
-        amount: 450000,
-      },
-      {
-        _id: "5",
-        from: "organizer",
-        message:
-          "We can consider ₹4,50,000 if we include additional promotional activities.",
-        timestamp: "2024-01-09T15:45:00Z",
-      },
-    ]);
-  };
-
-  const handleSendMessage = () => {
-    if (newMessage.trim() && selectedDeal) {
-      const message: ChatMessage = {
-        _id: Date.now().toString(),
-        from: "agent",
-        message: newMessage,
-        timestamp: new Date().toISOString(),
-      };
-
-      setChatMessages((prev) => [...prev, message]);
-      setNewMessage("");
-
-      // TODO: Send message to API
+      const result = await response.json();
+      if (result.success) {
+        // Transform data to match interface
+        const transformedDeals = result.deals.map((deal: any) => ({
+          _id: deal._id,
+          event: deal.event,
+          sponsor: deal.sponsor,
+          proposedAmount: deal.proposedAmount,
+          currentAmount: deal.finalAmount || deal.proposedAmount,
+          status: deal.status,
+          assignedDate: deal.createdAt,
+          lastActivity: deal.updatedAt,
+        }));
+        setDeals(transformedDeals);
+      } else {
+        console.error("Failed to load deals:", result.message);
+      }
+    } catch (error) {
+      console.error("Error loading deals:", error);
     }
   };
 
-  const handleUpdateDealStatus = (
+  const handleOpenChat = async (deal: Deal) => {
+    setSelectedDeal(deal);
+    setIsChatOpen(true);
+
+    // Load real chat messages from API
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/deals/${deal._id}/chat`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Transform data to match interface
+        const transformedMessages = result.messages.map((msg: any) => ({
+          _id: msg._id,
+          from: msg.fromRole,
+          message: msg.message,
+          timestamp: msg.timestamp,
+          fromName: msg.fromName,
+        }));
+        setChatMessages(transformedMessages);
+      } else {
+        console.error("Failed to load chat messages:", result.message);
+      }
+    } catch (error) {
+      console.error("Error loading chat messages:", error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && selectedDeal) {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`/api/deals/${selectedDeal._id}/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ message: newMessage }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          const newChatMessage: ChatMessage = {
+            _id: result.message._id,
+            from: "agent",
+            message: result.message.message,
+            timestamp: result.message.timestamp,
+          };
+
+          setChatMessages((prev) => [...prev, newChatMessage]);
+          setNewMessage("");
+        } else {
+          alert(result.message || "Failed to send message");
+        }
+      } catch (error) {
+        console.error("Error sending message:", error);
+        alert("Network error. Please try again.");
+      }
+    }
+  };
+
+  const handleUpdateDealStatus = async (
     dealId: string,
     newStatus: Deal["status"],
   ) => {
-    setDeals((prev) =>
-      prev.map((deal) =>
-        deal._id === dealId ? { ...deal, status: newStatus } : deal,
-      ),
-    );
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/deals/${dealId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
-    // TODO: Update deal status via API
-    alert(`Deal status updated to: ${newStatus}`);
+      const result = await response.json();
+      if (result.success) {
+        setDeals((prev) =>
+          prev.map((deal) =>
+            deal._id === dealId ? { ...deal, status: newStatus } : deal,
+          ),
+        );
+        alert(`Deal status updated to: ${newStatus}`);
+      } else {
+        alert(result.message || "Failed to update deal status");
+      }
+    } catch (error) {
+      console.error("Error updating deal status:", error);
+      alert("Network error. Please try again.");
+    }
   };
 
   const formatCurrency = (amount: number) => {

@@ -17,8 +17,18 @@ import {
   handleGetSponsors,
   eventMemoryStore,
 } from "./routes/events";
+import {
+  handleGetInterestedSponsors,
+  handleRespondToInterest,
+  handleGetAgentDeals,
+  handleGetChatMessages,
+  handleSendChatMessage,
+  handleUpdateDealStatus,
+  dealMemoryStore,
+} from "./routes/deals";
 import { authenticateToken } from "./middleware/auth";
 import { memoryStore } from "./database/memory-store";
+import { createDefaultAgent } from "./database/default-agent";
 
 export function createServer() {
   const app = express();
@@ -38,6 +48,9 @@ export function createServer() {
     );
   });
 
+  // Create default agent account
+  createDefaultAgent();
+
   // Middleware
   app.use(cors());
   app.use(express.json({ limit: "10mb" }));
@@ -55,6 +68,7 @@ export function createServer() {
       stats: {
         users: memoryStore.getStats(),
         events: eventMemoryStore.getStats(),
+        deals: dealMemoryStore.getStats(),
       },
     });
   });
@@ -79,6 +93,26 @@ export function createServer() {
     handleExpressInterest,
   );
   app.get("/api/sponsors", handleGetSponsors);
+
+  // Deal routes
+  app.get(
+    "/api/events/:eventId/interested-sponsors",
+    authenticateToken,
+    handleGetInterestedSponsors,
+  );
+  app.post(
+    "/api/events/:eventId/sponsors/:sponsorId/respond",
+    authenticateToken,
+    handleRespondToInterest,
+  );
+  app.get("/api/deals/agent", authenticateToken, handleGetAgentDeals);
+  app.get("/api/deals/:dealId/chat", authenticateToken, handleGetChatMessages);
+  app.post("/api/deals/:dealId/chat", authenticateToken, handleSendChatMessage);
+  app.patch(
+    "/api/deals/:dealId/status",
+    authenticateToken,
+    handleUpdateDealStatus,
+  );
 
   // Health check with database status
   app.get("/api/health", async (_req, res) => {
