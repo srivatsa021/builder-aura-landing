@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import mongoose from "mongoose";
 import { connectToDatabase } from "./database/connection";
 import { handleDemo } from "./routes/demo";
 import {
@@ -36,25 +37,15 @@ export function createServer() {
 
   // Public routes
   app.get("/api/ping", (_req, res) => {
-    import("mongoose")
-      .then((mongoose) => {
-        const dbStatus =
-          mongoose.connection.readyState === 1
-            ? "MongoDB connected"
-            : "Using memory store";
-        res.json({
-          message: "SponsorHub API v1.0",
-          database: dbStatus,
-          stats: memoryStore.getStats(),
-        });
-      })
-      .catch(() => {
-        res.json({
-          message: "SponsorHub API v1.0",
-          database: "Using memory store",
-          stats: memoryStore.getStats(),
-        });
-      });
+    const dbStatus =
+      mongoose.connection.readyState === 1
+        ? "MongoDB connected"
+        : "Using memory store";
+    res.json({
+      message: "SponsorHub API v1.0",
+      database: dbStatus,
+      stats: memoryStore.getStats(),
+    });
   });
 
   app.get("/api/demo", handleDemo);
