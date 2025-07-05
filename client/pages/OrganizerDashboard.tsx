@@ -165,8 +165,13 @@ export default function OrganizerDashboard() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/events", {
-        method: "POST",
+      const url = editingEvent
+        ? `/api/events/${editingEvent._id}`
+        : "/api/events";
+      const method = editingEvent ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
