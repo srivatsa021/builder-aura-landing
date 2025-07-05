@@ -28,7 +28,7 @@ interface EventData {
 }
 
 class EventMemoryStore {
-  private events: Map<string, EventData> = new Map();
+  public events: Map<string, EventData> = new Map();
   private idCounter = 1;
 
   generateId(): string {
@@ -380,6 +380,229 @@ export const handleExpressInterest: RequestHandler = async (
     res.status(500).json({
       success: false,
       message: "Failed to express interest",
+    });
+  }
+};
+
+// Update event
+export const handleUpdateEvent: RequestHandler = async (
+  req: AuthenticatedRequest,
+  res,
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    if (req.user.role !== "organizer") {
+      return res.status(403).json({
+        success: false,
+        message: "Only organizers can update events",
+      });
+    }
+
+    const { eventId } = req.params;
+    const {
+      title,
+      description,
+      eventDate,
+      expectedAttendees,
+      sponsorshipAmount,
+      category,
+      venue,
+    } = req.body;
+
+    // Validate required fields
+    if (
+      !title ||
+      !description ||
+      !eventDate ||
+      !expectedAttendees ||
+      !sponsorshipAmount ||
+      !category ||
+      !venue
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for updating event");
+
+      const event = await Event.findById(eventId);
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+        });
+      }
+
+      // Check if user owns this event
+      if (event.organizer.toString() !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only update your own events",
+        });
+      }
+
+      // Update event
+      event.title = title;
+      event.description = description;
+      event.eventDate = new Date(eventDate);
+      event.expectedAttendees = parseInt(expectedAttendees);
+      event.sponsorshipAmount = parseInt(sponsorshipAmount);
+      event.category = category;
+      event.venue = venue;
+
+      await event.save();
+
+      const populatedEvent = await Event.findById(eventId).populate(
+        "organizer",
+        "name clubName collegeName",
+      );
+
+      res.json({
+        success: true,
+        event: populatedEvent,
+        message: "Event updated successfully",
+      });
+    } else {
+      console.log("💾 Using memory store for updating event");
+
+      const event = await eventMemoryStore.getEventById(eventId);
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+        });
+      }
+
+      // Check if user owns this event
+      if (event.organizer._id !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only update your own events",
+        });
+      }
+
+      // Update event in memory store
+      const updatedEvent = {
+        ...event,
+        title,
+        description,
+        eventDate,
+        expectedAttendees: parseInt(expectedAttendees),
+        sponsorshipAmount: parseInt(sponsorshipAmount),
+        category,
+        venue,
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Update in memory store
+      eventMemoryStore.events.set(eventId, updatedEvent);
+
+      res.json({
+        success: true,
+        event: updatedEvent,
+        message: "Event updated successfully",
+      });
+    }
+  } catch (error) {
+    console.error("Update event error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update event",
+    });
+  }
+};
+
+// Delete event
+export const handleDeleteEvent: RequestHandler = async (
+  req: AuthenticatedRequest,
+  res,
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    if (req.user.role !== "organizer") {
+      return res.status(403).json({
+        success: false,
+        message: "Only organizers can delete events",
+      });
+    }
+
+    const { eventId } = req.params;
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for deleting event");
+
+      const event = await Event.findById(eventId);
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+        });
+      }
+
+      // Check if user owns this event
+      if (event.organizer.toString() !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only delete your own events",
+        });
+      }
+
+      await Event.findByIdAndDelete(eventId);
+
+      res.json({
+        success: true,
+        message: "Event deleted successfully",
+      });
+    } else {
+      console.log("💾 Using memory store for deleting event");
+
+      const event = await eventMemoryStore.getEventById(eventId);
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+        });
+      }
+
+      // Check if user owns this event
+      if (event.organizer._id !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only delete your own events",
+        });
+      }
+
+      // Delete from memory store
+      eventMemoryStore.events.delete(eventId);
+
+      res.json({
+        success: true,
+        message: "Event deleted successfully",
+      });
+    }
+  } catch (error) {
+    console.error("Delete event error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete event",
     });
   }
 };

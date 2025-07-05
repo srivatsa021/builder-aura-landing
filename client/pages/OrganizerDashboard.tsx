@@ -249,11 +249,24 @@ export default function OrganizerDashboard() {
     }
 
     try {
-      // TODO: Implement delete API endpoint
-      alert("Event deleted successfully!");
-      loadEvents();
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert("Event deleted successfully!");
+        loadEvents(); // Reload the events list
+      } else {
+        alert(result.message || "Failed to delete event");
+      }
     } catch (error) {
-      alert("Failed to delete event");
+      console.error("Error deleting event:", error);
+      alert("Network error. Please try again.");
     }
   };
 

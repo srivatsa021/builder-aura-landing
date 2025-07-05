@@ -13,6 +13,8 @@ import {
   handleGetEvents,
   handleGetOrganizerEvents,
   handleCreateEvent,
+  handleUpdateEvent,
+  handleDeleteEvent,
   handleExpressInterest,
   handleGetSponsors,
   eventMemoryStore,
@@ -87,6 +89,8 @@ export function createServer() {
   app.get("/api/events", handleGetEvents);
   app.get("/api/events/organizer", authenticateToken, handleGetOrganizerEvents);
   app.post("/api/events", authenticateToken, handleCreateEvent);
+  app.put("/api/events/:eventId", authenticateToken, handleUpdateEvent);
+  app.delete("/api/events/:eventId", authenticateToken, handleDeleteEvent);
   app.post(
     "/api/events/:eventId/interest",
     authenticateToken,
