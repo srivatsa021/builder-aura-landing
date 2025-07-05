@@ -1,4 +1,5 @@
 import { memoryStore } from "./memory-store";
+import bcrypt from "bcryptjs";
 
 export async function createDefaultAgent() {
   try {
@@ -9,10 +10,14 @@ export async function createDefaultAgent() {
       return;
     }
 
+    // Hash the password
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash("a@12345", salt);
+
     // Create default agent
     await memoryStore.createUser({
       email: "a@gmail.com",
-      password: "$2a$12$LQv3c1yqBwlVHpPjrPyeNu3RVqZLsLGYEf9SMHC8gVQ5aBz1eo1QG", // Hash of "a@12345"
+      password: hashedPassword,
       name: "Platform Agent",
       phone: "9999999999",
       role: "agent",
