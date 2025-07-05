@@ -20,46 +20,94 @@ export const handleLogin: RequestHandler = async (req, res) => {
       return res.status(400).json(response);
     }
 
-    // Find user by email and role
-    const user = await User.findOne({
-      email: email.toLowerCase(),
-      role,
-      isActive: true,
-    });
+    const isMongoConnected = mongoose.connection.readyState === 1;
 
-    if (!user) {
+    if (isMongoConnected) {
+      // Use MongoDB
+      console.log("📦 Using MongoDB for login");
+
+      // Find user by email and role
+      const user = await User.findOne({
+        email: email.toLowerCase(),
+        role,
+        isActive: true,
+      });
+
+      if (!user) {
+        const response: AuthResponse = {
+          success: false,
+          message: "Invalid credentials or user not found",
+        };
+        return res.status(401).json(response);
+      }
+
+      // Check password
+      const isPasswordValid = await user.comparePassword(password);
+      if (!isPasswordValid) {
+        const response: AuthResponse = {
+          success: false,
+          message: "Invalid credentials",
+        };
+        return res.status(401).json(response);
+      }
+
+      // Generate JWT token
+      const token = generateToken(user);
+
       const response: AuthResponse = {
-        success: false,
-        message: "Invalid credentials or user not found",
+        success: true,
+        token,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
       };
-      return res.status(401).json(response);
-    }
 
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
+      res.json(response);
+    } else {
+      // Use memory store fallback
+      console.log("💾 Using memory store for login (MongoDB not connected)");
+
+      // Find user by email and role
+      const user = await memoryStore.findUserByEmail(email, role);
+
+      if (!user) {
+        const response: AuthResponse = {
+          success: false,
+          message: "Invalid credentials or user not found",
+        };
+        return res.status(401).json(response);
+      }
+
+      // Check password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        const response: AuthResponse = {
+          success: false,
+          message: "Invalid credentials",
+        };
+        return res.status(401).json(response);
+      }
+
+      // Generate JWT token
+      const mockUser = { _id: user._id, email: user.email, role: user.role };
+      const token = generateToken(mockUser as any);
+
       const response: AuthResponse = {
-        success: false,
-        message: "Invalid credentials",
+        success: true,
+        token,
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
       };
-      return res.status(401).json(response);
+
+      res.json(response);
     }
-
-    // Generate JWT token
-    const token = generateToken(user);
-
-    const response: AuthResponse = {
-      success: true,
-      token,
-      user: {
-        id: user._id.toString(),
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-    };
-
-    res.json(response);
   } catch (error) {
     console.error("Login error:", error);
     const response: AuthResponse = {
