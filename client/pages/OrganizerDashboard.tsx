@@ -40,6 +40,7 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Event {
   _id: string;
@@ -96,10 +97,13 @@ export default function OrganizerDashboard() {
     description: "",
     eventDate: "",
     expectedAttendees: "",
-    sponsorshipAmount: "",
     category: "",
     venue: "",
   });
+
+  // Package form state
+  const [packageCount, setPackageCount] = useState(1);
+  const [packages, setPackages] = useState([{ amount: "", deliverables: "" }]);
 
   useEffect(() => {
     // Get user info
@@ -163,45 +167,79 @@ export default function OrganizerDashboard() {
   const handleEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate packages
+    for (let i = 0; i < packages.length; i++) {
+      if (!packages[i].amount || !packages[i].deliverables) {
+        alert(`Package ${i + 1}: Please fill in both amount and deliverables`);
+        return;
+      }
+    }
+
     try {
       const token = localStorage.getItem("token");
-      const url = editingEvent
-        ? `/api/events/${editingEvent._id}`
-        : "/api/events";
-      const method = editingEvent ? "PUT" : "POST";
 
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...eventForm,
-          status: "published", // Publish immediately
-        }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        alert(
-          editingEvent
-            ? "Event updated successfully!"
-            : "Event created successfully!",
-        );
-        setIsEventFormOpen(false);
-        setEditingEvent(null);
-        setEventForm({
-          title: "",
-          description: "",
-          eventDate: "",
-          expectedAttendees: "",
-          sponsorshipAmount: "",
-          category: "",
-          venue: "",
+      if (editingEvent) {
+        // For updates, we only update the basic event info for now
+        const response = await fetch(`/api/events/${editingEvent._id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ...eventForm,
+            sponsorshipAmount: packages[0]?.amount || 0, // Temporary fallback
+            status: "published",
+          }),
         });
-        // Reload events to show the updated list
-        loadEvents();
+
+        const result = await response.json();
+        if (result.success) {
+          alert("Event updated successfully!");
+          resetForm();
+          loadEvents();
+        } else {
+          alert(result.message || "Failed to update event");
+        }
+      } else {
+        // Create new event
+        const eventResponse = await fetch("/api/events", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ...eventForm,
+            sponsorshipAmount: packages.reduce((sum, pkg) => sum + parseInt(pkg.amount), 0), // Total amount
+            status: "published",
+          }),
+        });
+
+        const eventResult = await eventResponse.json();
+        if (eventResult.success) {
+          // Create packages for the event
+          const packagesResponse = await fetch(`/api/events/${eventResult.event._id}/packages`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ packages }),
+          });
+
+          const packagesResult = await packagesResponse.json();
+          if (packagesResult.success) {
+            alert("Event and packages created successfully!");
+            resetForm();
+            loadEvents();
+          } else {
+            alert("Event created but failed to create packages: " + packagesResult.message);
+          }
+        } else {
+          alert(eventResult.message || "Failed to create event");
+        }
+      }
       } else {
         alert(
           result.message ||
@@ -237,19 +275,23 @@ export default function OrganizerDashboard() {
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event);
     // Format date to YYYY-MM-DD for input field
-    const formattedDate = event.eventDate.includes("T")
-      ? event.eventDate.split("T")[0]
-      : event.eventDate.split(" ")[0] || event.eventDate;
+    const formattedDate = event.eventDate.includes('T')
+      ? event.eventDate.split('T')[0]
+      : event.eventDate.split(' ')[0] || event.eventDate;
 
     setEventForm({
       title: event.title,
       description: event.description,
       eventDate: formattedDate,
       expectedAttendees: event.expectedAttendees.toString(),
-      sponsorshipAmount: event.sponsorshipAmount.toString(),
       category: event.category,
       venue: event.venue,
     });
+
+    // TODO: Load existing packages for edit mode
+    setPackages([{ amount: "", deliverables: "" }]);
+    setPackageCount(1);
+
     setIsEventFormOpen(true);
   };
 
@@ -456,46 +498,23 @@ export default function OrganizerDashboard() {
               </Card>
 
               <div>
-                <h3 className="font-medium mb-3">Available Sponsors</h3>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {sponsors.map((sponsor) => (
-                    <Card key={sponsor._id} className="text-sm">
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-medium line-clamp-1">
-                            {sponsor.companyName}
-                          </h4>
-                          <Badge
-                            variant={
-                              sponsor.status === "open"
-                                ? "default"
-                                : "secondary"
-                            }
-                            className="text-xs"
-                          >
-                            {sponsor.status}
-                          </Badge>
-                        </div>
-                        <p className="text-muted-foreground text-xs mb-1">
-                          {sponsor.industry}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Contact: {sponsor.contactPerson}
-                        </p>
-                        {sponsor.website && (
-                          <a
-                            href={sponsor.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary text-xs hover:underline block mt-1"
-                          >
-                            Visit Website
-                          </a>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium">Sponsor Connection</h3>
                 </div>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Building2 className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Connect with sponsors to fund your events
+                    </p>
+                    <Link to="/sponsors">
+                      <Button className="w-full">
+                        <Building2 className="h-4 w-4 mr-2" />
+                        View Sponsors
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>
