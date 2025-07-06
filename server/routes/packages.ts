@@ -261,3 +261,122 @@ export const handleGetAllSponsors: RequestHandler = async (
     });
   }
 };
+
+// Handle organizer response to package interest
+export const handlePackageInterestResponse: RequestHandler = async (
+  req: AuthenticatedRequest,
+  res,
+) => {
+  try {
+    if (!req.user || req.user.role !== "organizer") {
+      return res.status(403).json({
+        success: false,
+        message: "Only organizers can respond to package interest",
+      });
+    }
+
+    const { eventId, packageNumber, sponsorId } = req.params;
+    const { action } = req.body; // "accept" or "decline"
+
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for package interest response");
+
+      // Verify event exists and user owns it
+      const event = await Event.findById(eventId);
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+        });
+      }
+
+      if (event.organizer.toString() !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only respond to interests for your own events",
+        });
+      }
+
+      // Find the package
+      const packageDoc = await Package.findOne({
+        eventId,
+        packageNumber: parseInt(packageNumber),
+      });
+
+      if (!packageDoc) {
+        return res.status(404).json({
+          success: false,
+          message: "Package not found",
+        });
+      }
+
+      // Check if sponsor has expressed interest in this package
+      if (!packageDoc.interestedSponsors.includes(sponsorId as any)) {
+        return res.status(400).json({
+          success: false,
+          message: "Sponsor has not expressed interest in this package",
+        });
+      }
+
+      if (action === "accept") {
+        // Create a deal and assign to agent pool
+        const newDeal = new Deal({
+          eventId,
+          packageId: packageDoc._id,
+          sponsorId,
+          organizerId: req.user.userId,
+          status: "pending",
+          amount: packageDoc.amount,
+          description: `Package ${packageNumber}: ${packageDoc.deliverables}`,
+        });
+
+        await newDeal.save();
+
+        // Remove sponsor from interested list and set as selected
+        packageDoc.interestedSponsors = packageDoc.interestedSponsors.filter(
+          (id: any) => id.toString() !== sponsorId,
+        );
+        packageDoc.selectedSponsor = sponsorId as any;
+        packageDoc.status = "selected";
+        await packageDoc.save();
+
+        res.json({
+          success: true,
+          message:
+            "Package interest accepted! Deal created and will be assigned to an agent.",
+          dealId: newDeal._id,
+        });
+      } else if (action === "decline") {
+        // Remove sponsor from interested list
+        packageDoc.interestedSponsors = packageDoc.interestedSponsors.filter(
+          (id: any) => id.toString() !== sponsorId,
+        );
+        await packageDoc.save();
+
+        res.json({
+          success: true,
+          message: "Package interest declined.",
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid action. Must be 'accept' or 'decline'",
+        });
+      }
+    } else {
+      console.log("💾 Database not available");
+      return res.status(503).json({
+        success: false,
+        message: "Database not available",
+      });
+    }
+  } catch (error) {
+    console.error("Package interest response error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to respond to package interest",
+    });
+  }
+};
