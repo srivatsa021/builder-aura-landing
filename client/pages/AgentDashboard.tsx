@@ -28,17 +28,29 @@ import {
 interface Deal {
   _id: string;
   event: {
+    _id: string;
     title: string;
     eventDate: string;
-    organizer: string;
-    college: string;
   };
   sponsor: {
+    _id: string;
+    name: string;
     companyName: string;
-    contactPerson: string;
   };
-  proposedAmount: number;
-  currentAmount?: number;
+  organizer: {
+    _id: string;
+    name: string;
+    clubName: string;
+    collegeName: string;
+  };
+  packageId: {
+    _id: string;
+    packageNumber: number;
+    amount: number;
+    deliverables: string;
+  };
+  amount: number;
+  description?: string;
   status:
     | "pending"
     | "negotiating"
@@ -46,8 +58,8 @@ interface Deal {
     | "signed"
     | "completed"
     | "cancelled";
-  assignedDate: string;
-  lastActivity: string;
+  createdAt: string;
+  agent?: string;
 }
 
 interface ChatMessage {
