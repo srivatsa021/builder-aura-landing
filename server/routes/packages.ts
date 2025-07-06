@@ -30,37 +30,66 @@ export const handleCreatePackages: RequestHandler = async (
     }
 
     const isMongoConnected = mongoose.connection.readyState === 1;
-    const createdPackages = [];
 
-    for (let i = 0; i < packages.length; i++) {
-      const { amount, deliverables } = packages[i];
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for creating packages");
 
-      if (!amount || !deliverables) {
-        return res.status(400).json({
+      // Verify event exists and user owns it
+      const event = await Event.findById(eventId);
+      if (!event) {
+        return res.status(404).json({
           success: false,
-          message: `Package ${i + 1}: Amount and deliverables are required`,
+          message: "Event not found",
         });
       }
 
-      const packageData = {
-        eventId,
-        packageNumber: i + 1,
-        amount: parseInt(amount),
-        deliverables,
-        interestedSponsors: [],
-        status: "available" as const,
-      };
+      if (event.organizer.toString() !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only create packages for your own events",
+        });
+      }
 
-      const createdPackage =
-        await packageMemoryStore.createPackage(packageData);
-      createdPackages.push(createdPackage);
+      // Delete existing packages for this event (for updates)
+      await Package.deleteMany({ eventId });
+
+      const createdPackages = [];
+      for (let i = 0; i < packages.length; i++) {
+        const { amount, deliverables } = packages[i];
+
+        if (!amount || !deliverables) {
+          return res.status(400).json({
+            success: false,
+            message: `Package ${i + 1}: Amount and deliverables are required`,
+          });
+        }
+
+        const packageDoc = new Package({
+          eventId,
+          packageNumber: i + 1,
+          amount: parseInt(amount),
+          deliverables,
+          interestedSponsors: [],
+          status: "available",
+        });
+
+        await packageDoc.save();
+        createdPackages.push(packageDoc);
+      }
+
+      res.status(201).json({
+        success: true,
+        packages: createdPackages,
+        message: "Packages created successfully",
+      });
+    } else {
+      console.log("💾 Using memory store for creating packages");
+      // Fallback to memory store implementation
+      res.status(503).json({
+        success: false,
+        message: "Database not available",
+      });
     }
-
-    res.status(201).json({
-      success: true,
-      packages: createdPackages,
-      message: "Packages created successfully",
-    });
   } catch (error) {
     console.error("Create packages error:", error);
     res.status(500).json({
