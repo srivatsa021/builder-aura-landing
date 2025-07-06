@@ -87,10 +87,10 @@ export default function AgentDashboard() {
     loadMyDeals();
   }, []);
 
-  const loadMutualInterests = async () => {
+  const loadPendingDeals = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/interests/mutual", {
+      const response = await fetch("/api/deals/pending", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -98,12 +98,12 @@ export default function AgentDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        setMutualInterests(result.interests);
+        setPendingDeals(result.deals);
       } else {
-        console.error("Failed to load mutual interests:", result.message);
+        console.error("Failed to load pending deals:", result.message);
       }
     } catch (error) {
-      console.error("Error loading mutual interests:", error);
+      console.error("Error loading pending deals:", error);
     }
   };
 
