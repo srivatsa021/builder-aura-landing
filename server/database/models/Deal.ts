@@ -2,12 +2,14 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IDeal extends Document {
   event: mongoose.Types.ObjectId;
+  packageId: mongoose.Types.ObjectId;
   sponsor: mongoose.Types.ObjectId;
   organizer: mongoose.Types.ObjectId;
-  agent: mongoose.Types.ObjectId;
+  agent?: mongoose.Types.ObjectId;
 
-  proposedAmount: number;
+  amount: number;
   finalAmount?: number;
+  description?: string;
 
   status:
     | "pending"
