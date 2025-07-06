@@ -149,20 +149,40 @@ export const handleExpressPackageInterest: RequestHandler = async (
     }
 
     const { packageId } = req.params;
-    const success = await packageMemoryStore.expressInterestInPackage(
-      packageId,
-      req.user.userId,
-    );
+    const isMongoConnected = mongoose.connection.readyState === 1;
 
-    if (success) {
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for expressing package interest");
+
+      const packageDoc = await Package.findById(packageId);
+      if (!packageDoc) {
+        return res.status(404).json({
+          success: false,
+          message: "Package not found",
+        });
+      }
+
+      // Check if already interested
+      if (packageDoc.interestedSponsors.includes(req.user.userId as any)) {
+        return res.status(400).json({
+          success: false,
+          message: "Already expressed interest in this package",
+        });
+      }
+
+      // Add sponsor to interested list
+      packageDoc.interestedSponsors.push(req.user.userId as any);
+      await packageDoc.save();
+
       res.json({
         success: true,
         message: "Interest expressed in package successfully",
       });
     } else {
-      res.status(400).json({
+      console.log("💾 Using memory store for expressing package interest");
+      res.status(503).json({
         success: false,
-        message: "Failed to express interest or already interested",
+        message: "Database not available",
       });
     }
   } catch (error) {
