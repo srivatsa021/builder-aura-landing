@@ -2,7 +2,9 @@ import { RequestHandler } from "express";
 import { AuthenticatedRequest } from "../middleware/auth";
 import { eventMemoryStore } from "./events";
 import { memoryStore } from "../database/memory-store";
-import { packageMemoryStore } from "./packages";
+import { Package } from "../database/models/Package";
+import { Event } from "../database/models/Event";
+import mongoose from "mongoose";
 
 // In-memory storage for deals and chats
 interface Deal {
