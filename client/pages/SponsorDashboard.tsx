@@ -127,14 +127,10 @@ export default function SponsorDashboard() {
     setIsModalOpen(true);
   };
 
-  const handleExpressInterest = async (eventId: string, packageId?: string) => {
+  const handleExpressInterest = async (packageId: string) => {
     try {
       const token = localStorage.getItem("token");
-      const url = packageId
-        ? `/api/packages/${packageId}/interest`
-        : `/api/events/${eventId}/interest`;
-
-      const response = await fetch(url, {
+      const response = await fetch(`/api/packages/${packageId}/interest`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -143,25 +139,16 @@ export default function SponsorDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        alert(
-          packageId
-            ? "Interest expressed in package! The organizer will be notified."
-            : "Interest expressed! The organizer will be notified.",
-        );
+        alert("Interest expressed in package! The organizer will be notified.");
 
-        if (packageId) {
-          // Update package interest in the selected event
-          if (selectedEvent) {
-            const updatedPackages = selectedEvent.packages?.map((pkg) =>
-              pkg._id === packageId
-                ? { ...pkg, hasExpressedInterest: true }
-                : pkg,
-            );
-            setSelectedEvent({ ...selectedEvent, packages: updatedPackages });
-          }
-        } else {
-          // Add to interested events list
-          setInterestedEvents((prev) => new Set([...prev, eventId]));
+        // Update package interest in the selected event
+        if (selectedEvent) {
+          const updatedPackages = selectedEvent.packages?.map((pkg) =>
+            pkg._id === packageId
+              ? { ...pkg, hasExpressedInterest: true }
+              : pkg,
+          );
+          setSelectedEvent({ ...selectedEvent, packages: updatedPackages });
         }
       } else {
         alert(result.message || "Failed to express interest");
