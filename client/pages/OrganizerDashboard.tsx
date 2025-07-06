@@ -656,13 +656,14 @@ export default function OrganizerDashboard() {
 
       {/* New Event Form Modal */}
       <Dialog open={isEventFormOpen} onOpenChange={setIsEventFormOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>
               {editingEvent ? "Edit Event" : "Create New Event"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleEventSubmit} className="space-y-4">
+          <div className="overflow-y-auto flex-1 pr-2">
+            <form onSubmit={handleEventSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Event Title *</Label>
@@ -954,36 +955,26 @@ export default function OrganizerDashboard() {
                       </div>
 
                       {/* Show interested packages */}
-                      {sponsor.interestedPackages &&
-                        sponsor.interestedPackages.length > 0 && (
-                          <div className="bg-muted/50 rounded-lg p-3">
-                            <h5 className="font-medium text-sm mb-2">
-                              Interested in these packages:
-                            </h5>
-                            <div className="space-y-2">
-                              {sponsor.interestedPackages.map(
-                                (pkg: any, idx: number) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center justify-between text-sm"
-                                  >
-                                    <span className="font-medium">
-                                      Package {pkg.packageNumber}
-                                    </span>
-                                    <div className="text-right">
-                                      <div className="font-semibold text-primary">
-                                        {formatCurrency(pkg.amount)}
-                                      </div>
-                                      <div className="text-xs text-muted-foreground truncate max-w-40">
-                                        {pkg.deliverables}
-                                      </div>
-                                    </div>
+                      {sponsor.interestedPackages && sponsor.interestedPackages.length > 0 && (
+                        <div className="bg-muted/50 rounded-lg p-3">
+                          <h5 className="font-medium text-sm mb-2">Interested in these packages:</h5>
+                          <div className="space-y-2">
+                            {sponsor.interestedPackages.map((pkg: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between text-sm">
+                                <span className="font-medium">Package {pkg.packageNumber}</span>
+                                <div className="text-right">
+                                  <div className="font-semibold text-primary">
+                                    {formatCurrency(pkg.amount)}
                                   </div>
-                                ),
-                              )}
-                            </div>
+                                  <div className="text-xs text-muted-foreground truncate max-w-40">
+                                    {pkg.deliverables}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        )}
+                        </div>
+                      )}
 
                       <div className="flex gap-3">
                         <Button
