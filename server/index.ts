@@ -137,6 +137,11 @@ export function createServer() {
     authenticateToken,
     handleExpressPackageInterest,
   );
+  app.post(
+    "/api/events/:eventId/packages/:packageNumber/sponsors/:sponsorId/respond",
+    authenticateToken,
+    handlePackageInterestResponse,
+  );
 
   // Sponsor interest routes
   app.get("/api/sponsors/all", authenticateToken, handleGetAllSponsors);
