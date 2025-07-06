@@ -413,7 +413,7 @@ export default function AgentDashboard() {
         )}
 
         <div className="mb-6">
-          <h2 className="text-3xl font-bold mb-2">Assigned Deals</h2>
+          <h2 className="text-3xl font-bold mb-2">My Assigned Deals</h2>
           <p className="text-muted-foreground">
             Manage sponsorship agreements you're mediating
           </p>
@@ -421,7 +421,7 @@ export default function AgentDashboard() {
 
         {/* Deals List */}
         <div className="space-y-6">
-          {deals.map((deal) => (
+          {myDeals.map((deal) => (
             <Card key={deal._id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
