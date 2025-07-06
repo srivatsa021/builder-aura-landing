@@ -22,7 +22,6 @@ interface EventData {
   category: string;
   venue: string;
   status: "draft" | "published" | "sponsored" | "completed";
-  interestedSponsors: string[];
   createdAt: string;
   updatedAt: string;
 }
