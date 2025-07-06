@@ -60,10 +60,7 @@ interface ChatMessage {
 
 export default function AgentDashboard() {
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [mutualInterests, setMutualInterests] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -73,9 +70,30 @@ export default function AgentDashboard() {
       setUser(JSON.parse(storedUser));
     }
 
-    // Load real deals from API
+    // Load mutual interests from API
+    loadMutualInterests();
     loadDeals();
   }, []);
+
+  const loadMutualInterests = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/interests/mutual", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setMutualInterests(result.interests);
+      } else {
+        console.error("Failed to load mutual interests:", result.message);
+      }
+    } catch (error) {
+      console.error("Error loading mutual interests:", error);
+    }
+  };
 
   const loadDeals = async () => {
     try {
@@ -108,14 +126,11 @@ export default function AgentDashboard() {
     }
   };
 
-  const handleOpenChat = async (deal: Deal) => {
-    setSelectedDeal(deal);
-    setIsChatOpen(true);
-
-    // Load real chat messages from API
+  const handleAssignToInterest = async (interestId: string) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/deals/${deal._id}/chat`, {
+      const response = await fetch(`/api/interests/${interestId}/assign`, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -123,54 +138,18 @@ export default function AgentDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        // Transform data to match interface
-        const transformedMessages = result.messages.map((msg: any) => ({
-          _id: msg._id,
-          from: msg.fromRole,
-          message: msg.message,
-          timestamp: msg.timestamp,
-          fromName: msg.fromName,
-        }));
-        setChatMessages(transformedMessages);
+        alert(
+          "Successfully assigned to this interest! Both parties will be notified.",
+        );
+        // Reload interests and deals
+        loadMutualInterests();
+        loadDeals();
       } else {
-        console.error("Failed to load chat messages:", result.message);
+        alert(result.message || "Failed to assign to interest");
       }
     } catch (error) {
-      console.error("Error loading chat messages:", error);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (newMessage.trim() && selectedDeal) {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`/api/deals/${selectedDeal._id}/chat`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ message: newMessage }),
-        });
-
-        const result = await response.json();
-        if (result.success) {
-          const newChatMessage: ChatMessage = {
-            _id: result.message._id,
-            from: "agent",
-            message: result.message.message,
-            timestamp: result.message.timestamp,
-          };
-
-          setChatMessages((prev) => [...prev, newChatMessage]);
-          setNewMessage("");
-        } else {
-          alert(result.message || "Failed to send message");
-        }
-      } catch (error) {
-        console.error("Error sending message:", error);
-        alert("Network error. Please try again.");
-      }
+      console.error("Error assigning to interest:", error);
+      alert("Network error. Please try again.");
     }
   };
 
