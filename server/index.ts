@@ -140,19 +140,6 @@ export function createServer() {
 
   // Sponsor interest routes
   app.get("/api/sponsors/all", authenticateToken, handleGetAllSponsors);
-  app.post(
-    "/api/sponsors/:sponsorId/interest",
-    authenticateToken,
-    handleExpressSponsorInterest,
-  );
-
-  // Agent routes for mutual interests
-  app.get("/api/interests/mutual", authenticateToken, handleGetMutualInterests);
-  app.post(
-    "/api/interests/:interestId/assign",
-    authenticateToken,
-    handleAssignAgentToInterest,
-  );
 
   // Health check with database status
   app.get("/api/health", async (_req, res) => {
