@@ -33,6 +33,7 @@ import {
   handleGetEventPackages,
   handleExpressPackageInterest,
   handleGetAllSponsors,
+  handlePackageInterestResponse,
 } from "./routes/packages";
 import { authenticateToken } from "./middleware/auth";
 import { memoryStore } from "./database/memory-store";
