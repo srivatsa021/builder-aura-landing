@@ -963,7 +963,8 @@ export default function OrganizerDashboard() {
                       {sponsor.interestedPackages &&
                         sponsor.interestedPackages.length > 0 && (
                           <div className="bg-muted/50 rounded-lg p-3">
-                            <h5 className="font-medium text-sm mb-2">
+                            <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
+                              <DollarSign className="h-4 w-4" />
                               Interested in these packages:
                             </h5>
                             <div className="space-y-2">
@@ -971,17 +972,19 @@ export default function OrganizerDashboard() {
                                 (pkg: any, idx: number) => (
                                   <div
                                     key={idx}
-                                    className="flex items-center justify-between text-sm"
+                                    className="flex items-start justify-between text-sm bg-background/50 rounded p-2"
                                   >
-                                    <span className="font-medium">
-                                      Package {pkg.packageNumber}
-                                    </span>
-                                    <div className="text-right">
+                                    <div className="flex-1">
+                                      <span className="font-medium text-primary">
+                                        Package {pkg.packageNumber}
+                                      </span>
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        {pkg.deliverables}
+                                      </div>
+                                    </div>
+                                    <div className="text-right ml-3">
                                       <div className="font-semibold text-primary">
                                         {formatCurrency(pkg.amount)}
-                                      </div>
-                                      <div className="text-xs text-muted-foreground truncate max-w-40">
-                                        {pkg.deliverables}
                                       </div>
                                     </div>
                                   </div>
