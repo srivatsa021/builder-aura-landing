@@ -45,7 +45,7 @@ class EventMemoryStore {
     };
 
     this.events.set(event._id, event);
-    console.log(`💾 [EventMemoryStore] Created event: ${event.title}`);
+    console.log(`��� [EventMemoryStore] Created event: ${event.title}`);
     return event;
   }
 
@@ -274,7 +274,6 @@ export const handleCreateEvent: RequestHandler = async (
         category,
         venue,
         status,
-        interestedSponsors: [],
       };
 
       const newEvent = await eventMemoryStore.createEvent(eventData);
