@@ -20,6 +20,15 @@ import {
   Download,
 } from "lucide-react";
 
+interface Package {
+  _id: string;
+  packageNumber: number;
+  amount: number;
+  deliverables: string;
+  status: string;
+  hasExpressedInterest?: boolean;
+}
+
 interface Event {
   _id: string;
   title: string;
@@ -36,6 +45,7 @@ interface Event {
   venue: string;
   brochureUrl?: string;
   status: string;
+  packages?: Package[];
 }
 
 export default function SponsorDashboard() {
@@ -100,15 +110,34 @@ export default function SponsorDashboard() {
     }
   };
 
-  const handleViewDetails = (event: Event) => {
+  const handleViewDetails = async (event: Event) => {
     setSelectedEvent(event);
+
+    // Load packages for this event
+    try {
+      const response = await fetch(`/api/events/${event._id}/packages`);
+      const result = await response.json();
+      if (result.success) {
+        setSelectedEvent({ ...event, packages: result.packages });
+      } else {
+        setSelectedEvent({ ...event, packages: [] });
+      }
+    } catch (error) {
+      console.error("Error loading packages:", error);
+      setSelectedEvent({ ...event, packages: [] });
+    }
+
     setIsModalOpen(true);
   };
 
-  const handleExpressInterest = async (eventId: string) => {
+  const handleExpressInterest = async (eventId: string, packageId?: string) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/events/${eventId}/interest`, {
+      const url = packageId
+        ? `/api/packages/${packageId}/interest`
+        : `/api/events/${eventId}/interest`;
+
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -117,9 +146,26 @@ export default function SponsorDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        alert("Interest expressed! The organizer will be notified.");
-        // Add to interested events list
-        setInterestedEvents((prev) => new Set([...prev, eventId]));
+        alert(
+          packageId
+            ? "Interest expressed in package! The organizer will be notified."
+            : "Interest expressed! The organizer will be notified.",
+        );
+
+        if (packageId) {
+          // Update package interest in the selected event
+          if (selectedEvent) {
+            const updatedPackages = selectedEvent.packages?.map((pkg) =>
+              pkg._id === packageId
+                ? { ...pkg, hasExpressedInterest: true }
+                : pkg,
+            );
+            setSelectedEvent({ ...selectedEvent, packages: updatedPackages });
+          }
+        } else {
+          // Add to interested events list
+          setInterestedEvents((prev) => new Set([...prev, eventId]));
+        }
       } else {
         alert(result.message || "Failed to express interest");
       }
@@ -419,31 +465,78 @@ export default function SponsorDashboard() {
                     </Card>
                   </div>
 
+                  {/* Sponsorship Packages */}
+                  {selectedEvent.packages &&
+                    selectedEvent.packages.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">
+                          Sponsorship Packages
+                        </h3>
+                        <div className="grid gap-4">
+                          {selectedEvent.packages.map((pkg) => (
+                            <Card
+                              key={pkg._id}
+                              className="border-l-4 border-l-primary"
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-lg mb-2">
+                                      Package {pkg.packageNumber}
+                                    </h4>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center">
+                                        <DollarSign className="h-4 w-4 mr-2 text-primary" />
+                                        <span className="font-semibold text-primary">
+                                          {formatCurrency(pkg.amount)}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">
+                                          <strong>Deliverables:</strong>{" "}
+                                          {pkg.deliverables}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="ml-4">
+                                    <Button
+                                      onClick={() =>
+                                        handleExpressInterest(
+                                          selectedEvent._id,
+                                          pkg._id,
+                                        )
+                                      }
+                                      disabled={pkg.hasExpressedInterest}
+                                      variant={
+                                        pkg.hasExpressedInterest
+                                          ? "secondary"
+                                          : "default"
+                                      }
+                                      size="sm"
+                                    >
+                                      <Heart
+                                        className={`h-4 w-4 mr-2 ${pkg.hasExpressedInterest ? "fill-current" : ""}`}
+                                      />
+                                      {pkg.hasExpressedInterest
+                                        ? "Interested ✓"
+                                        : "Express Interest"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                   {/* Action Buttons */}
                   <div className="flex gap-4 pt-4">
                     <Button
-                      className="flex-1"
-                      onClick={() => {
-                        handleExpressInterest(selectedEvent._id);
-                        setIsModalOpen(false);
-                      }}
-                      disabled={interestedEvents.has(selectedEvent._id)}
-                      variant={
-                        interestedEvents.has(selectedEvent._id)
-                          ? "secondary"
-                          : "default"
-                      }
-                    >
-                      <Heart
-                        className={`h-4 w-4 mr-2 ${interestedEvents.has(selectedEvent._id) ? "fill-current" : ""}`}
-                      />
-                      {interestedEvents.has(selectedEvent._id)
-                        ? "Interest Expressed ✓"
-                        : "Express Interest"}
-                    </Button>
-                    <Button
                       variant="outline"
                       onClick={() => setIsModalOpen(false)}
+                      className="flex-1"
                     >
                       Close
                     </Button>
