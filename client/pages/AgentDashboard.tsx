@@ -323,11 +323,7 @@ export default function AgentDashboard() {
                   <p className="text-sm text-muted-foreground">Total Value</p>
                   <p className="text-2xl font-bold">
                     {formatCurrency(
-                      deals.reduce(
-                        (sum, deal) =>
-                          sum + (deal.currentAmount || deal.proposedAmount),
-                        0,
-                      ),
+                      myDeals.reduce((sum, deal) => sum + deal.amount, 0),
                     )}
                   </p>
                 </div>
