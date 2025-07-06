@@ -122,14 +122,8 @@ export default function AgentDashboard() {
       } else {
         console.error("Failed to load my deals:", result.message);
       }
-          lastActivity: deal.updatedAt,
-        }));
-        setDeals(transformedDeals);
-      } else {
-        console.error("Failed to load deals:", result.message);
-      }
     } catch (error) {
-      console.error("Error loading deals:", error);
+      console.error("Error loading my deals:", error);
     }
   };
 
