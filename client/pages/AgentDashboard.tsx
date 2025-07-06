@@ -107,10 +107,10 @@ export default function AgentDashboard() {
     }
   };
 
-  const loadDeals = async () => {
+  const loadMyDeals = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/deals/agent", {
+      const response = await fetch("/api/deals/my", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -118,15 +118,10 @@ export default function AgentDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        // Transform data to match interface
-        const transformedDeals = result.deals.map((deal: any) => ({
-          _id: deal._id,
-          event: deal.event,
-          sponsor: deal.sponsor,
-          proposedAmount: deal.proposedAmount,
-          currentAmount: deal.finalAmount || deal.proposedAmount,
-          status: deal.status,
-          assignedDate: deal.createdAt,
+        setMyDeals(result.deals);
+      } else {
+        console.error("Failed to load my deals:", result.message);
+      }
           lastActivity: deal.updatedAt,
         }));
         setDeals(transformedDeals);
