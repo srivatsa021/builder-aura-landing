@@ -1031,7 +1031,7 @@ export default function OrganizerDashboard() {
                                 (pkg: any, idx: number) => (
                                   <div
                                     key={idx}
-                                    className="flex items-start justify-between text-sm bg-background/50 rounded p-2"
+                                    className="flex items-start justify-between text-sm bg-background/50 rounded p-3"
                                   >
                                     <div className="flex-1">
                                       <span className="font-medium text-primary">
@@ -1040,11 +1040,39 @@ export default function OrganizerDashboard() {
                                       <div className="text-xs text-muted-foreground mt-1">
                                         {pkg.deliverables}
                                       </div>
-                                    </div>
-                                    <div className="text-right ml-3">
-                                      <div className="font-semibold text-primary">
+                                      <div className="text-xs font-semibold text-primary mt-1">
                                         {formatCurrency(pkg.amount)}
                                       </div>
+                                    </div>
+                                    <div className="flex gap-2 ml-3">
+                                      <Button
+                                        size="sm"
+                                        variant="default"
+                                        onClick={() =>
+                                          handlePackageInterestResponse(
+                                            sponsor._id,
+                                            pkg.packageNumber,
+                                            "accept",
+                                          )
+                                        }
+                                      >
+                                        <Check className="h-3 w-3 mr-1" />
+                                        Accept
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() =>
+                                          handlePackageInterestResponse(
+                                            sponsor._id,
+                                            pkg.packageNumber,
+                                            "decline",
+                                          )
+                                        }
+                                      >
+                                        <X className="h-3 w-3 mr-1" />
+                                        Decline
+                                      </Button>
                                     </div>
                                   </div>
                                 ),
