@@ -350,10 +350,72 @@ export default function AgentDashboard() {
           </Card>
         </div>
 
+        {/* Mutual Interests Section */}
+        {mutualInterests.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold mb-2">
+              Available Mutual Interests
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Assign yourself to mediate these mutual interests
+            </p>
+
+            <div className="grid gap-4">
+              {mutualInterests.map((interest) => (
+                <Card
+                  key={interest._id}
+                  className="border-l-4 border-l-primary"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold mb-2">
+                          Mutual Interest Match
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">
+                              Sponsor
+                            </h4>
+                            <p className="font-medium">
+                              {interest.sponsor.companyName}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Contact: {interest.sponsor.name}
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">
+                              Organizer
+                            </h4>
+                            <p className="font-medium">
+                              {interest.organizer.clubName}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {interest.organizer.collegeName} •{" "}
+                              {interest.organizer.name}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => handleAssignToInterest(interest._id)}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Assign Myself
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mb-6">
-          <h2 className="text-3xl font-bold mb-2">Active Deals</h2>
+          <h2 className="text-3xl font-bold mb-2">Assigned Deals</h2>
           <p className="text-muted-foreground">
-            Manage and mediate sponsorship agreements
+            Manage sponsorship agreements you're mediating
           </p>
         </div>
 
@@ -445,148 +507,42 @@ export default function AgentDashboard() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
-                  <Button
-                    onClick={() => handleOpenChat(deal)}
-                    className="flex-1"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Open Chat
-                  </Button>
-
                   {deal.status === "negotiating" && (
                     <Button
-                      variant="outline"
                       onClick={() =>
                         handleUpdateDealStatus(deal._id, "approved")
                       }
                     >
-                      Mark Approved
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Approve Deal
                     </Button>
                   )}
 
                   {deal.status === "approved" && (
                     <Button
-                      variant="outline"
                       onClick={() => handleUpdateDealStatus(deal._id, "signed")}
                     >
-                      Mark Signed
+                      <FileText className="h-4 w-4 mr-2" />
+                      Mark as Signed
                     </Button>
                   )}
 
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                  {deal.status === "signed" && (
+                    <Button
+                      onClick={() =>
+                        handleUpdateDealStatus(deal._id, "completed")
+                      }
+                      variant="outline"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Mark Completed
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-
-        {/* Chat Modal */}
-        <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh]">
-            {selectedDeal && (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="text-xl">
-                    Deal Communication: {selectedDeal.event.title}
-                  </DialogTitle>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>
-                      {selectedDeal.sponsor.companyName} ↔{" "}
-                      {selectedDeal.event.college}
-                    </span>
-                    <Badge
-                      className={`${getStatusColor(selectedDeal.status)} text-white`}
-                    >
-                      {selectedDeal.status}
-                    </Badge>
-                  </div>
-                </DialogHeader>
-
-                <div className="flex flex-col h-[60vh]">
-                  {/* Chat Messages */}
-                  <div className="flex-1 overflow-y-auto border rounded-lg p-4 space-y-4 bg-muted/30">
-                    {chatMessages.map((message) => (
-                      <div
-                        key={message._id}
-                        className={`flex gap-3 ${message.from === "agent" ? "flex-row-reverse" : ""}`}
-                      >
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback
-                            className={`text-xs ${
-                              message.from === "sponsor"
-                                ? "bg-blue-500"
-                                : message.from === "organizer"
-                                  ? "bg-green-500"
-                                  : "bg-primary"
-                            } text-white`}
-                          >
-                            {getSenderInitials(message.from)}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div
-                          className={`flex-1 ${message.from === "agent" ? "text-right" : ""}`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-xs font-medium">
-                              {getSenderName(message.from)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(message.timestamp).toLocaleTimeString()}
-                            </p>
-                          </div>
-
-                          <div
-                            className={`inline-block p-3 rounded-lg max-w-xs ${
-                              message.from === "agent"
-                                ? "bg-primary text-primary-foreground ml-auto"
-                                : "bg-background border"
-                            }`}
-                          >
-                            <p className="text-sm">{message.message}</p>
-                            {message.amount && (
-                              <div className="mt-2 pt-2 border-t border-current/20">
-                                <p className="text-xs font-medium">
-                                  Proposed Amount:{" "}
-                                  {formatCurrency(message.amount)}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Message Input */}
-                  <div className="mt-4 flex gap-2">
-                    <Textarea
-                      placeholder="Type your message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="flex-1"
-                      rows={2}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                    />
-                    <Button
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
       </main>
     </div>
   );
