@@ -120,6 +120,13 @@ export function createServer() {
     handleRespondToInterest,
   );
   app.get("/api/deals/agent", authenticateToken, handleGetAgentDeals);
+  app.get("/api/deals/pending", authenticateToken, handleGetPendingDeals);
+  app.post(
+    "/api/deals/:dealId/assign",
+    authenticateToken,
+    handleAssignAgentToDeal,
+  );
+  app.get("/api/deals/my", authenticateToken, handleGetMyDeals);
   app.get("/api/deals/:dealId/chat", authenticateToken, handleGetChatMessages);
   app.post("/api/deals/:dealId/chat", authenticateToken, handleSendChatMessage);
   app.patch(
