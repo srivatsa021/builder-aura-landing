@@ -175,18 +175,7 @@ export const handleGetInterestedSponsors: RequestHandler = async (
           message: "You can only view sponsors for your own events",
         });
       }
-    } else {
-      console.log("💾 Database not available");
-      return res.status(503).json({
-        success: false,
-        message: "Database not available",
-      });
-    }
-
-    const isMongoConnected = mongoose.connection.readyState === 1;
-
-    if (isMongoConnected) {
-      console.log("📦 Using MongoDB for getting interested sponsors");
+      console.log("📦 Getting interested sponsors");
 
       // Get packages for this event with interested sponsors populated
       const packages = await Package.find({ eventId })
