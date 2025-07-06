@@ -63,16 +63,6 @@ class EventMemoryStore {
     return this.events.get(id) || null;
   }
 
-  async expressInterest(eventId: string, sponsorId: string): Promise<boolean> {
-    const event = this.events.get(eventId);
-    if (event && !event.interestedSponsors.includes(sponsorId)) {
-      event.interestedSponsors.push(sponsorId);
-      event.updatedAt = new Date().toISOString();
-      return true;
-    }
-    return false;
-  }
-
   getStats() {
     return {
       totalEvents: this.events.size,
