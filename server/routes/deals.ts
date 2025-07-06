@@ -169,21 +169,72 @@ export const handleGetInterestedSponsors: RequestHandler = async (
       });
     }
 
-    // Get sponsor details
-    const sponsors = [];
-    for (const sponsorId of event.interestedSponsors) {
-      const sponsor = await memoryStore.findUserById(sponsorId);
-      if (sponsor) {
-        sponsors.push({
-          _id: sponsor._id,
-          name: sponsor.name,
-          companyName: sponsor.companyName,
-          industry: sponsor.industry,
-          website: sponsor.website,
-          phone: sponsor.phone,
-        });
+    // Get packages for this event
+    const packages = await packageMemoryStore.getPackagesByEvent(eventId);
+
+    // Collect all unique sponsor IDs with their package interests
+    const sponsorInterestMap: Record<
+      string,
+      {
+        sponsor: any;
+        interestedPackages: Array<{
+          packageNumber: number;
+          amount: number;
+          deliverables: string;
+        }>;
+      }
+    > = {};
+
+    // Add sponsors from package interests
+    for (const pkg of packages) {
+      for (const sponsorId of pkg.interestedSponsors) {
+        const sponsor = await memoryStore.findUserById(sponsorId);
+        if (sponsor) {
+          if (!sponsorInterestMap[sponsorId]) {
+            sponsorInterestMap[sponsorId] = {
+              sponsor: {
+                _id: sponsor._id,
+                name: sponsor.name,
+                companyName: sponsor.companyName,
+                industry: sponsor.industry,
+                website: sponsor.website,
+                phone: sponsor.phone,
+              },
+              interestedPackages: [],
+            };
+          }
+          sponsorInterestMap[sponsorId].interestedPackages.push({
+            packageNumber: pkg.packageNumber,
+            amount: pkg.amount,
+            deliverables: pkg.deliverables,
+          });
+        }
       }
     }
+
+    // Add sponsors from general event interest (for backward compatibility)
+    for (const sponsorId of event.interestedSponsors) {
+      const sponsor = await memoryStore.findUserById(sponsorId);
+      if (sponsor && !sponsorInterestMap[sponsorId]) {
+        sponsorInterestMap[sponsorId] = {
+          sponsor: {
+            _id: sponsor._id,
+            name: sponsor.name,
+            companyName: sponsor.companyName,
+            industry: sponsor.industry,
+            website: sponsor.website,
+            phone: sponsor.phone,
+          },
+          interestedPackages: [],
+        };
+      }
+    }
+
+    // Convert to array format
+    const sponsors = Object.values(sponsorInterestMap).map((item) => ({
+      ...item.sponsor,
+      interestedPackages: item.interestedPackages,
+    }));
 
     res.json({
       success: true,
