@@ -194,7 +194,7 @@ export const handleExpressPackageInterest: RequestHandler = async (
   }
 };
 
-// Get all sponsors (for organizer to view and express interest)
+// Get all sponsors (for organizer to view in sponsors page)
 export const handleGetAllSponsors: RequestHandler = async (
   req: AuthenticatedRequest,
   res,
@@ -207,167 +207,45 @@ export const handleGetAllSponsors: RequestHandler = async (
       });
     }
 
-    // Get all sponsor users from memory store
-    const allUsers = Array.from(memoryStore.findAll());
-    const sponsors = allUsers
-      .filter((user) => user.role === "sponsor" && user.isActive)
-      .map((sponsor) => ({
-        _id: sponsor._id,
-        name: sponsor.name,
-        companyName: sponsor.companyName,
-        industry: sponsor.industry,
-        website: sponsor.website,
-        phone: sponsor.phone,
-      }));
+    const isMongoConnected = mongoose.connection.readyState === 1;
 
-    res.json({
-      success: true,
-      sponsors,
-    });
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for getting sponsors");
+
+      const sponsors = await User.find({ role: "sponsor", isActive: true })
+        .select("name companyName industry phone website")
+        .sort({ companyName: 1 });
+
+      res.json({
+        success: true,
+        sponsors,
+      });
+    } else {
+      console.log("💾 Using memory store for getting sponsors");
+
+      // Get all sponsor users from memory store
+      const allUsers = Array.from(memoryStore.findAll());
+      const sponsors = allUsers
+        .filter((user) => user.role === "sponsor" && user.isActive)
+        .map((sponsor) => ({
+          _id: sponsor._id,
+          name: sponsor.name,
+          companyName: sponsor.companyName,
+          industry: sponsor.industry,
+          website: sponsor.website,
+          phone: sponsor.phone,
+        }));
+
+      res.json({
+        success: true,
+        sponsors,
+      });
+    }
   } catch (error) {
     console.error("Get all sponsors error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to get sponsors",
-    });
-  }
-};
-
-// Express interest in a sponsor (organizer to sponsor)
-export const handleExpressSponsorInterest: RequestHandler = async (
-  req: AuthenticatedRequest,
-  res,
-) => {
-  try {
-    if (!req.user || req.user.role !== "organizer") {
-      return res.status(403).json({
-        success: false,
-        message: "Only organizers can express interest in sponsors",
-      });
-    }
-
-    const { sponsorId } = req.params;
-
-    // Check if interest already exists
-    const existingInterest = Array.from(
-      packageMemoryStore.interests.values(),
-    ).find(
-      (i) => i.sponsorId === sponsorId && i.organizerId === req.user!.userId,
-    );
-
-    if (existingInterest) {
-      return res.status(400).json({
-        success: false,
-        message: "Interest already expressed",
-      });
-    }
-
-    const interest = await packageMemoryStore.createInterest({
-      sponsorId,
-      organizerId: req.user.userId,
-      type: "organizer_to_sponsor",
-      status: "pending",
-    });
-
-    res.json({
-      success: true,
-      message: "Interest expressed in sponsor successfully",
-      interest,
-    });
-  } catch (error) {
-    console.error("Express sponsor interest error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to express interest",
-    });
-  }
-};
-
-// Get mutual interests for agent dashboard
-export const handleGetMutualInterests: RequestHandler = async (
-  req: AuthenticatedRequest,
-  res,
-) => {
-  try {
-    if (!req.user || req.user.role !== "agent") {
-      return res.status(403).json({
-        success: false,
-        message: "Only agents can view mutual interests",
-      });
-    }
-
-    const mutualInterests = await packageMemoryStore.findMutualInterests();
-
-    // Enrich with user and event data
-    const enrichedInterests = [];
-    for (const interest of mutualInterests) {
-      const sponsor = await memoryStore.findUserById(interest.sponsorId);
-      const organizer = await memoryStore.findUserById(interest.organizerId);
-
-      if (sponsor && organizer) {
-        enrichedInterests.push({
-          ...interest,
-          sponsor: {
-            name: sponsor.name,
-            companyName: sponsor.companyName,
-          },
-          organizer: {
-            name: organizer.name,
-            clubName: organizer.clubName,
-            collegeName: organizer.collegeName,
-          },
-        });
-      }
-    }
-
-    res.json({
-      success: true,
-      interests: enrichedInterests,
-    });
-  } catch (error) {
-    console.error("Get mutual interests error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to get mutual interests",
-    });
-  }
-};
-
-// Assign agent to mutual interest
-export const handleAssignAgentToInterest: RequestHandler = async (
-  req: AuthenticatedRequest,
-  res,
-) => {
-  try {
-    if (!req.user || req.user.role !== "agent") {
-      return res.status(403).json({
-        success: false,
-        message: "Only agents can assign themselves to interests",
-      });
-    }
-
-    const { interestId } = req.params;
-    const success = await packageMemoryStore.assignAgentToInterest(
-      interestId,
-      req.user.userId,
-    );
-
-    if (success) {
-      res.json({
-        success: true,
-        message: "Agent assigned successfully. Both parties will be notified.",
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        message: "Interest not found",
-      });
-    }
-  } catch (error) {
-    console.error("Assign agent error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to assign agent",
     });
   }
 };
