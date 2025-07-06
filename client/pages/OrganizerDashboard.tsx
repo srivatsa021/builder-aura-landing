@@ -211,7 +211,10 @@ export default function OrganizerDashboard() {
           },
           body: JSON.stringify({
             ...eventForm,
-            sponsorshipAmount: packages.reduce((sum, pkg) => sum + parseInt(pkg.amount), 0), // Total amount
+            sponsorshipAmount: packages.reduce(
+              (sum, pkg) => sum + parseInt(pkg.amount),
+              0,
+            ), // Total amount
             status: "published",
           }),
         });
@@ -219,14 +222,17 @@ export default function OrganizerDashboard() {
         const eventResult = await eventResponse.json();
         if (eventResult.success) {
           // Create packages for the event
-          const packagesResponse = await fetch(`/api/events/${eventResult.event._id}/packages`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+          const packagesResponse = await fetch(
+            `/api/events/${eventResult.event._id}/packages`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ packages }),
             },
-            body: JSON.stringify({ packages }),
-          });
+          );
 
           const packagesResult = await packagesResponse.json();
           if (packagesResult.success) {
@@ -234,22 +240,56 @@ export default function OrganizerDashboard() {
             resetForm();
             loadEvents();
           } else {
-            alert("Event created but failed to create packages: " + packagesResult.message);
+            alert(
+              "Event created but failed to create packages: " +
+                packagesResult.message,
+            );
           }
         } else {
           alert(eventResult.message || "Failed to create event");
         }
       }
-      } else {
-        alert(
-          result.message ||
-            `Failed to ${editingEvent ? "update" : "create"} event`,
-        );
-      }
     } catch (error) {
-      console.error("Error creating event:", error);
+      console.error(
+        `Error ${editingEvent ? "updating" : "creating"} event:`,
+        error,
+      );
       alert("Network error. Please try again.");
     }
+  };
+
+  const resetForm = () => {
+    setIsEventFormOpen(false);
+    setEditingEvent(null);
+    setEventForm({
+      title: "",
+      description: "",
+      eventDate: "",
+      expectedAttendees: "",
+      category: "",
+      venue: "",
+    });
+    setPackages([{ amount: "", deliverables: "" }]);
+    setPackageCount(1);
+  };
+
+  const handlePackageCountChange = (count: number) => {
+    setPackageCount(count);
+    const newPackages = Array.from(
+      { length: count },
+      (_, i) => packages[i] || { amount: "", deliverables: "" },
+    );
+    setPackages(newPackages);
+  };
+
+  const handlePackageChange = (
+    index: number,
+    field: "amount" | "deliverables",
+    value: string,
+  ) => {
+    const newPackages = [...packages];
+    newPackages[index] = { ...newPackages[index], [field]: value };
+    setPackages(newPackages);
   };
 
   const handleNotificationResponse = (
@@ -275,9 +315,9 @@ export default function OrganizerDashboard() {
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event);
     // Format date to YYYY-MM-DD for input field
-    const formattedDate = event.eventDate.includes('T')
-      ? event.eventDate.split('T')[0]
-      : event.eventDate.split(' ')[0] || event.eventDate;
+    const formattedDate = event.eventDate.includes("T")
+      ? event.eventDate.split("T")[0]
+      : event.eventDate.split(" ")[0] || event.eventDate;
 
     setEventForm({
       title: event.title,
