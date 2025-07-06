@@ -155,20 +155,31 @@ export const handleGetInterestedSponsors: RequestHandler = async (
     }
 
     const { eventId } = req.params;
-    const event = await eventMemoryStore.getEventById(eventId);
+    const isMongoConnected = mongoose.connection.readyState === 1;
 
-    if (!event) {
-      return res.status(404).json({
-        success: false,
-        message: "Event not found",
-      });
-    }
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for event verification");
 
-    // Check if user owns this event
-    if (event.organizer._id !== req.user.userId) {
-      return res.status(403).json({
+      // Verify event exists and user owns it
+      const event = await Event.findById(eventId);
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+        });
+      }
+
+      if (event.organizer.toString() !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only view sponsors for your own events",
+        });
+      }
+    } else {
+      console.log("💾 Database not available");
+      return res.status(503).json({
         success: false,
-        message: "You can only view sponsors for your own events",
+        message: "Database not available",
       });
     }
 
