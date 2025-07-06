@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from "../middleware/auth";
 import { Package } from "../database/models/Package";
 import { User } from "../database/models/User";
 import { Event } from "../database/models/Event";
+import { Deal } from "../database/models/Deal";
 import mongoose from "mongoose";
 import { memoryStore } from "../database/memory-store";
 
