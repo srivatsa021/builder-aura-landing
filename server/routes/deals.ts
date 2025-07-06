@@ -228,6 +228,11 @@ export const handleGetInterestedSponsors: RequestHandler = async (
         ...item.sponsor,
         interestedPackages: item.interestedPackages,
       }));
+
+      res.json({
+        success: true,
+        sponsors,
+      });
     } else {
       console.log("💾 Database not available");
       return res.status(503).json({
@@ -235,11 +240,6 @@ export const handleGetInterestedSponsors: RequestHandler = async (
         message: "Database not available",
       });
     }
-
-    res.json({
-      success: true,
-      sponsors,
-    });
   } catch (error) {
     console.error("Get interested sponsors error:", error);
     res.status(500).json({
