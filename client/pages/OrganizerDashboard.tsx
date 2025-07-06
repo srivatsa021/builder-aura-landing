@@ -664,181 +664,186 @@ export default function OrganizerDashboard() {
           </DialogHeader>
           <div className="overflow-y-auto flex-1 pr-2">
             <form onSubmit={handleEventSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Event Title *</Label>
+                  <Input
+                    id="title"
+                    value={eventForm.title}
+                    onChange={(e) =>
+                      setEventForm({ ...eventForm, title: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Select
+                    value={eventForm.category}
+                    onValueChange={(value) =>
+                      setEventForm({ ...eventForm, category: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="cultural">Cultural</SelectItem>
+                      <SelectItem value="academic">Academic</SelectItem>
+                      <SelectItem value="sports">Sports</SelectItem>
+                      <SelectItem value="social">Social</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="title">Event Title *</Label>
-                <Input
-                  id="title"
-                  value={eventForm.title}
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={eventForm.description}
                   onChange={(e) =>
-                    setEventForm({ ...eventForm, title: e.target.value })
+                    setEventForm({ ...eventForm, description: e.target.value })
                   }
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
-                <Select
-                  value={eventForm.category}
-                  onValueChange={(value) =>
-                    setEventForm({ ...eventForm, category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="technical">Technical</SelectItem>
-                    <SelectItem value="cultural">Cultural</SelectItem>
-                    <SelectItem value="academic">Academic</SelectItem>
-                    <SelectItem value="sports">Sports</SelectItem>
-                    <SelectItem value="social">Social</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                value={eventForm.description}
-                onChange={(e) =>
-                  setEventForm({ ...eventForm, description: e.target.value })
-                }
-                required
-              />
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="eventDate">Event Date *</Label>
+                  <Input
+                    id="eventDate"
+                    type="date"
+                    value={eventForm.eventDate}
+                    onChange={(e) =>
+                      setEventForm({ ...eventForm, eventDate: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="venue">Venue *</Label>
+                  <Input
+                    id="venue"
+                    value={eventForm.venue}
+                    onChange={(e) =>
+                      setEventForm({ ...eventForm, venue: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="eventDate">Event Date *</Label>
-                <Input
-                  id="eventDate"
-                  type="date"
-                  value={eventForm.eventDate}
-                  onChange={(e) =>
-                    setEventForm({ ...eventForm, eventDate: e.target.value })
-                  }
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expectedAttendees">
+                    Expected Attendees *
+                  </Label>
+                  <Input
+                    id="expectedAttendees"
+                    type="number"
+                    value={eventForm.expectedAttendees}
+                    onChange={(e) =>
+                      setEventForm({
+                        ...eventForm,
+                        expectedAttendees: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Number of Sponsorship Packages *</Label>
+                  <Select
+                    value={packageCount.toString()}
+                    onValueChange={(value) =>
+                      handlePackageCountChange(parseInt(value))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select number of packages" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <SelectItem key={num} value={num.toString()}>
+                          {num} Package{num > 1 ? "s" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="venue">Venue *</Label>
-                <Input
-                  id="venue"
-                  value={eventForm.venue}
-                  onChange={(e) =>
-                    setEventForm({ ...eventForm, venue: e.target.value })
-                  }
-                  required
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="expectedAttendees">Expected Attendees *</Label>
-                <Input
-                  id="expectedAttendees"
-                  type="number"
-                  value={eventForm.expectedAttendees}
-                  onChange={(e) =>
-                    setEventForm({
-                      ...eventForm,
-                      expectedAttendees: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Number of Sponsorship Packages *</Label>
-                <Select
-                  value={packageCount.toString()}
-                  onValueChange={(value) =>
-                    handlePackageCountChange(parseInt(value))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select number of packages" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5].map((num) => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num} Package{num > 1 ? "s" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Package Creation Fields */}
-            <div className="space-y-4">
-              <Label className="text-base font-semibold">
-                Sponsorship Packages
-              </Label>
-              {packages.map((pkg, index) => (
-                <Card key={index} className="p-4">
-                  <h4 className="font-medium mb-3">Package {index + 1}</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`amount-${index}`}>Amount (₹) *</Label>
-                      <Input
-                        id={`amount-${index}`}
-                        type="number"
-                        placeholder="e.g., 50000"
-                        value={pkg.amount}
-                        onChange={(e) =>
-                          handlePackageChange(index, "amount", e.target.value)
-                        }
-                        required
-                      />
+              {/* Package Creation Fields */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">
+                  Sponsorship Packages
+                </Label>
+                {packages.map((pkg, index) => (
+                  <Card key={index} className="p-4">
+                    <h4 className="font-medium mb-3">Package {index + 1}</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={`amount-${index}`}>Amount (₹) *</Label>
+                        <Input
+                          id={`amount-${index}`}
+                          type="number"
+                          placeholder="e.g., 50000"
+                          value={pkg.amount}
+                          onChange={(e) =>
+                            handlePackageChange(index, "amount", e.target.value)
+                          }
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`deliverables-${index}`}>
+                          Deliverables *
+                        </Label>
+                        <Input
+                          id={`deliverables-${index}`}
+                          placeholder="e.g., Logo placement, booth space"
+                          value={pkg.deliverables}
+                          onChange={(e) =>
+                            handlePackageChange(
+                              index,
+                              "deliverables",
+                              e.target.value,
+                            )
+                          }
+                          required
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`deliverables-${index}`}>
-                        Deliverables *
-                      </Label>
-                      <Input
-                        id={`deliverables-${index}`}
-                        placeholder="e.g., Logo placement, booth space"
-                        value={pkg.deliverables}
-                        onChange={(e) =>
-                          handlePackageChange(
-                            index,
-                            "deliverables",
-                            e.target.value,
-                          )
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="brochure">Event Brochure (PDF)</Label>
-              <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
-                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Click to upload or drag and drop
-                </p>
-                <p className="text-xs text-muted-foreground">PDF files only</p>
+                  </Card>
+                ))}
               </div>
-            </div>
 
-            <div className="flex gap-4 pt-4">
-              <Button type="submit" className="flex-1">
-                {editingEvent ? "Update Event" : "Create Event"}
-              </Button>
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Cancel
-              </Button>
-            </div>
-          </form>
+              <div className="space-y-2">
+                <Label htmlFor="brochure">Event Brochure (PDF)</Label>
+                <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    PDF files only
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <Button type="submit" className="flex-1">
+                  {editingEvent ? "Update Event" : "Create Event"}
+                </Button>
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -955,26 +960,36 @@ export default function OrganizerDashboard() {
                       </div>
 
                       {/* Show interested packages */}
-                      {sponsor.interestedPackages && sponsor.interestedPackages.length > 0 && (
-                        <div className="bg-muted/50 rounded-lg p-3">
-                          <h5 className="font-medium text-sm mb-2">Interested in these packages:</h5>
-                          <div className="space-y-2">
-                            {sponsor.interestedPackages.map((pkg: any, idx: number) => (
-                              <div key={idx} className="flex items-center justify-between text-sm">
-                                <span className="font-medium">Package {pkg.packageNumber}</span>
-                                <div className="text-right">
-                                  <div className="font-semibold text-primary">
-                                    {formatCurrency(pkg.amount)}
+                      {sponsor.interestedPackages &&
+                        sponsor.interestedPackages.length > 0 && (
+                          <div className="bg-muted/50 rounded-lg p-3">
+                            <h5 className="font-medium text-sm mb-2">
+                              Interested in these packages:
+                            </h5>
+                            <div className="space-y-2">
+                              {sponsor.interestedPackages.map(
+                                (pkg: any, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    className="flex items-center justify-between text-sm"
+                                  >
+                                    <span className="font-medium">
+                                      Package {pkg.packageNumber}
+                                    </span>
+                                    <div className="text-right">
+                                      <div className="font-semibold text-primary">
+                                        {formatCurrency(pkg.amount)}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground truncate max-w-40">
+                                        {pkg.deliverables}
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-muted-foreground truncate max-w-40">
-                                    {pkg.deliverables}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                                ),
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       <div className="flex gap-3">
                         <Button
