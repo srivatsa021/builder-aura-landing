@@ -112,7 +112,12 @@ export default function SponsorDashboard() {
 
     // Load packages for this event
     try {
-      const response = await fetch(`/api/events/${event._id}/packages`);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/events/${event._id}/packages`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const result = await response.json();
       if (result.success) {
         setSelectedEvent({ ...event, packages: result.packages });
