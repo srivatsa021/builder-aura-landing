@@ -312,7 +312,7 @@ export default function OrganizerDashboard() {
     setIsNotificationOpen(false);
   };
 
-  const handleEditEvent = (event: Event) => {
+  const handleEditEvent = async (event: Event) => {
     setEditingEvent(event);
     // Format date to YYYY-MM-DD for input field
     const formattedDate = event.eventDate.includes("T")
@@ -328,9 +328,34 @@ export default function OrganizerDashboard() {
       venue: event.venue,
     });
 
-    // TODO: Load existing packages for edit mode
-    setPackages([{ amount: "", deliverables: "" }]);
-    setPackageCount(1);
+    // Load existing packages for edit mode
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/events/${event._id}/packages`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+      if (result.success && result.packages.length > 0) {
+        const existingPackages = result.packages.map((pkg: any) => ({
+          amount: pkg.amount.toString(),
+          deliverables: pkg.deliverables,
+        }));
+        setPackages(existingPackages);
+        setPackageCount(existingPackages.length);
+      } else {
+        // No existing packages, set default
+        setPackages([{ amount: "", deliverables: "" }]);
+        setPackageCount(1);
+      }
+    } catch (error) {
+      console.error("Error loading packages:", error);
+      // Fallback to default
+      setPackages([{ amount: "", deliverables: "" }]);
+      setPackageCount(1);
+    }
 
     setIsEventFormOpen(true);
   };
