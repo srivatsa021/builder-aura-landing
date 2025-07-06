@@ -490,20 +490,10 @@ export default function AgentDashboard() {
                 {/* Deal Description */}
                 {deal.description && (
                   <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm font-medium mb-1">
-                      Deal Details
-                    </p>
+                    <p className="text-sm font-medium mb-1">Deal Details</p>
                     <p className="text-sm text-muted-foreground">
                       {deal.description}
                     </p>
-                      <span>→</span>
-                      <span className="text-primary">
-                        Current:{" "}
-                        {formatCurrency(
-                          deal.currentAmount || deal.proposedAmount,
-                        )}
-                      </span>
-                    </div>
                   </div>
                 )}
 
