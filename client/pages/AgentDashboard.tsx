@@ -71,8 +71,8 @@ interface ChatMessage {
 }
 
 export default function AgentDashboard() {
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [mutualInterests, setMutualInterests] = useState<any[]>([]);
+  const [pendingDeals, setPendingDeals] = useState<Deal[]>([]);
+  const [myDeals, setMyDeals] = useState<Deal[]>([]);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -82,9 +82,9 @@ export default function AgentDashboard() {
       setUser(JSON.parse(storedUser));
     }
 
-    // Load mutual interests from API
-    loadMutualInterests();
-    loadDeals();
+    // Load pending deals and my assigned deals
+    loadPendingDeals();
+    loadMyDeals();
   }, []);
 
   const loadMutualInterests = async () => {
