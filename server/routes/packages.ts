@@ -103,12 +103,29 @@ export const handleCreatePackages: RequestHandler = async (
 export const handleGetEventPackages: RequestHandler = async (req, res) => {
   try {
     const { eventId } = req.params;
-    const packages = await packageMemoryStore.getPackagesByEvent(eventId);
+    const isMongoConnected = mongoose.connection.readyState === 1;
 
-    res.json({
-      success: true,
-      packages,
-    });
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for getting packages");
+
+      const packages = await Package.find({ eventId })
+        .sort({ packageNumber: 1 })
+        .populate(
+          "interestedSponsors",
+          "name companyName industry phone website",
+        );
+
+      res.json({
+        success: true,
+        packages,
+      });
+    } else {
+      console.log("💾 Using memory store for getting packages");
+      res.status(503).json({
+        success: false,
+        message: "Database not available",
+      });
+    }
   } catch (error) {
     console.error("Get event packages error:", error);
     res.status(500).json({
