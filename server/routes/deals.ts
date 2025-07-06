@@ -565,3 +565,155 @@ export const handleUpdateDealStatus: RequestHandler = async (
     });
   }
 };
+
+// Get pending deals for agent assignment
+export const handleGetPendingDeals: RequestHandler = async (
+  req: AuthenticatedRequest,
+  res,
+) => {
+  try {
+    if (!req.user || req.user.role !== "agent") {
+      return res.status(403).json({
+        success: false,
+        message: "Only agents can view pending deals",
+      });
+    }
+
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for getting pending deals");
+
+      const pendingDeals = await Deal.find({
+        status: "pending",
+        agent: { $exists: false },
+      })
+        .populate("event", "title eventDate")
+        .populate("sponsor", "name companyName")
+        .populate("organizer", "name clubName collegeName")
+        .populate("packageId", "packageNumber amount deliverables")
+        .sort({ createdAt: 1 });
+
+      res.json({
+        success: true,
+        deals: pendingDeals,
+      });
+    } else {
+      console.log("💾 Database not available");
+      return res.status(503).json({
+        success: false,
+        message: "Database not available",
+      });
+    }
+  } catch (error) {
+    console.error("Get pending deals error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get pending deals",
+    });
+  }
+};
+
+// Agent self-assign to a pending deal
+export const handleAssignAgentToDeal: RequestHandler = async (
+  req: AuthenticatedRequest,
+  res,
+) => {
+  try {
+    if (!req.user || req.user.role !== "agent") {
+      return res.status(403).json({
+        success: false,
+        message: "Only agents can assign themselves to deals",
+      });
+    }
+
+    const { dealId } = req.params;
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for agent assignment");
+
+      const deal = await Deal.findById(dealId);
+      if (!deal) {
+        return res.status(404).json({
+          success: false,
+          message: "Deal not found",
+        });
+      }
+
+      if (deal.agent) {
+        return res.status(400).json({
+          success: false,
+          message: "Deal already has an assigned agent",
+        });
+      }
+
+      deal.agent = req.user.userId as any;
+      deal.status = "negotiating";
+      await deal.save();
+
+      res.json({
+        success: true,
+        message:
+          "Successfully assigned to deal. You can now begin negotiations.",
+      });
+    } else {
+      console.log("💾 Database not available");
+      return res.status(503).json({
+        success: false,
+        message: "Database not available",
+      });
+    }
+  } catch (error) {
+    console.error("Assign agent to deal error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to assign agent to deal",
+    });
+  }
+};
+
+// Get deals assigned to current agent
+export const handleGetMyDeals: RequestHandler = async (
+  req: AuthenticatedRequest,
+  res,
+) => {
+  try {
+    if (!req.user || req.user.role !== "agent") {
+      return res.status(403).json({
+        success: false,
+        message: "Only agents can view their deals",
+      });
+    }
+
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for getting agent deals");
+
+      const myDeals = await Deal.find({ agent: req.user.userId })
+        .populate("event", "title eventDate")
+        .populate("sponsor", "name companyName")
+        .populate("organizer", "name clubName collegeName")
+        .populate("packageId", "packageNumber amount deliverables")
+        .sort({ createdAt: -1 });
+
+      res.json({
+        success: true,
+        deals: myDeals,
+      });
+    } else {
+      console.log("💾 Database not available");
+      return res.status(503).json({
+        success: false,
+        message: "Database not available",
+      });
+    }
+  } catch (error) {
+    console.error("Get my deals error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get deals",
+    });
+  }
+};
