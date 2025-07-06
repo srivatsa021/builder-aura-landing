@@ -308,7 +308,7 @@ export default function AgentDashboard() {
                 <div>
                   <p className="text-sm text-muted-foreground">Completed</p>
                   <p className="text-2xl font-bold">
-                    {deals.filter((d) => d.status === "completed").length}
+                    {myDeals.filter((d) => d.status === "completed").length}
                   </p>
                 </div>
                 <CheckCircle className="h-6 w-6 text-green-500" />
