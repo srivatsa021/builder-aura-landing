@@ -53,9 +53,6 @@ export default function SponsorDashboard() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [interestedEvents, setInterestedEvents] = useState<Set<string>>(
-    new Set(),
-  );
 
   useEffect(() => {
     // Get user info
