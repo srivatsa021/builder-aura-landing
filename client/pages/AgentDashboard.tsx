@@ -461,7 +461,12 @@ export default function AgentDashboard() {
                       </div>
                       <div className="flex items-center">
                         <Users className="h-4 w-4 mr-2" />
-                        {deal.event.organizer}, {deal.event.college}
+                        {deal.organizer.clubName}, {deal.organizer.collegeName}
+                      </div>
+                      <div className="flex items-center">
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Package {deal.packageId.packageNumber} •{" "}
+                        {deal.packageId.deliverables}
                       </div>
                     </div>
                   </div>
