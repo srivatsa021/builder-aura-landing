@@ -100,7 +100,7 @@ export const handleCreatePackages: RequestHandler = async (
 };
 
 // Get packages for an event
-export const handleGetEventPackages: RequestHandler = async (req, res) => {
+export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
   try {
     const { eventId } = req.params;
     const isMongoConnected = mongoose.connection.readyState === 1;
@@ -115,9 +115,20 @@ export const handleGetEventPackages: RequestHandler = async (req, res) => {
           "name companyName industry phone website",
         );
 
+      // If the request has a user (sponsor), mark packages they've expressed interest in
+      const packagesWithInterestStatus = packages.map((pkg) => {
+        const pkgObj = pkg.toObject();
+        if (req.user && req.user.role === "sponsor") {
+          pkgObj.hasExpressedInterest = pkg.interestedSponsors.some(
+            (sponsor: any) => sponsor._id.toString() === req.user.userId,
+          );
+        }
+        return pkgObj;
+      });
+
       res.json({
         success: true,
-        packages,
+        packages: packagesWithInterestStatus,
       });
     } else {
       console.log("💾 Using memory store for getting packages");
