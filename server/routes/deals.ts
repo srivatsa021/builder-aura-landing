@@ -172,27 +172,36 @@ export const handleGetInterestedSponsors: RequestHandler = async (
       });
     }
 
-    // Get packages for this event
-    const packages = await packageMemoryStore.getPackagesByEvent(eventId);
+    const isMongoConnected = mongoose.connection.readyState === 1;
 
-    // Collect all unique sponsor IDs with their package interests
-    const sponsorInterestMap: Record<
-      string,
-      {
-        sponsor: any;
-        interestedPackages: Array<{
-          packageNumber: number;
-          amount: number;
-          deliverables: string;
-        }>;
-      }
-    > = {};
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for getting interested sponsors");
 
-    // Add sponsors from package interests
-    for (const pkg of packages) {
-      for (const sponsorId of pkg.interestedSponsors) {
-        const sponsor = await memoryStore.findUserById(sponsorId);
-        if (sponsor) {
+      // Get packages for this event with interested sponsors populated
+      const packages = await Package.find({ eventId })
+        .populate(
+          "interestedSponsors",
+          "name companyName industry phone website",
+        )
+        .sort({ packageNumber: 1 });
+
+      // Collect all unique sponsor IDs with their package interests
+      const sponsorInterestMap: Record<
+        string,
+        {
+          sponsor: any;
+          interestedPackages: Array<{
+            packageNumber: number;
+            amount: number;
+            deliverables: string;
+          }>;
+        }
+      > = {};
+
+      // Process package interests
+      for (const pkg of packages) {
+        for (const sponsor of pkg.interestedSponsors) {
+          const sponsorId = sponsor._id.toString();
           if (!sponsorInterestMap[sponsorId]) {
             sponsorInterestMap[sponsorId] = {
               sponsor: {
@@ -213,31 +222,19 @@ export const handleGetInterestedSponsors: RequestHandler = async (
           });
         }
       }
-    }
 
-    // Add sponsors from general event interest (for backward compatibility)
-    for (const sponsorId of event.interestedSponsors) {
-      const sponsor = await memoryStore.findUserById(sponsorId);
-      if (sponsor && !sponsorInterestMap[sponsorId]) {
-        sponsorInterestMap[sponsorId] = {
-          sponsor: {
-            _id: sponsor._id,
-            name: sponsor.name,
-            companyName: sponsor.companyName,
-            industry: sponsor.industry,
-            website: sponsor.website,
-            phone: sponsor.phone,
-          },
-          interestedPackages: [],
-        };
-      }
+      // Convert to array format
+      const sponsors = Object.values(sponsorInterestMap).map((item) => ({
+        ...item.sponsor,
+        interestedPackages: item.interestedPackages,
+      }));
+    } else {
+      console.log("💾 Database not available");
+      return res.status(503).json({
+        success: false,
+        message: "Database not available",
+      });
     }
-
-    // Convert to array format
-    const sponsors = Object.values(sponsorInterestMap).map((item) => ({
-      ...item.sponsor,
-      interestedPackages: item.interestedPackages,
-    }));
 
     res.json({
       success: true,
