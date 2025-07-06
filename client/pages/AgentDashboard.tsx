@@ -400,9 +400,7 @@ export default function AgentDashboard() {
                           </div>
                         </div>
                       </div>
-                      <Button
-                        onClick={() => handleAssignToInterest(interest._id)}
-                      >
+                      <Button onClick={() => handleAssignToDeal(deal._id)}>
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Assign Myself
                       </Button>
