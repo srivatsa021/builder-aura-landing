@@ -471,10 +471,7 @@ export default function SponsorDashboard() {
                                   <div className="ml-4">
                                     <Button
                                       onClick={() =>
-                                        handleExpressInterest(
-                                          selectedEvent._id,
-                                          pkg._id,
-                                        )
+                                        handleExpressInterest(pkg._id)
                                       }
                                       disabled={pkg.hasExpressedInterest}
                                       variant={
