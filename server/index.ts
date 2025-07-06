@@ -26,6 +26,9 @@ import {
   handleGetChatMessages,
   handleSendChatMessage,
   handleUpdateDealStatus,
+  handleGetPendingDeals,
+  handleAssignAgentToDeal,
+  handleGetMyDeals,
   dealMemoryStore,
 } from "./routes/deals";
 import {
