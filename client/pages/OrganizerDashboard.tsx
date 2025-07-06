@@ -128,19 +128,53 @@ export default function OrganizerDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        // Transform data to match interface
-        const transformedEvents = result.events.map((event: any) => ({
-          _id: event._id,
-          title: event.title,
-          description: event.description,
-          eventDate: event.eventDate,
-          expectedAttendees: event.expectedAttendees,
-          sponsorshipAmount: event.sponsorshipAmount,
-          category: event.category,
-          venue: event.venue,
-          status: event.status,
-          interestedSponsors: event.interestedSponsors?.length || 0,
-        }));
+        // Transform data and get interested sponsors count from packages
+        const transformedEvents = await Promise.all(
+          result.events.map(async (event: any) => {
+            // Get packages for this event to count interested sponsors
+            let interestedSponsorsCount = 0;
+            try {
+              const packagesResponse = await fetch(
+                `/api/events/${event._id}/packages`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                },
+              );
+              const packagesResult = await packagesResponse.json();
+              if (packagesResult.success) {
+                // Count unique interested sponsors across all packages
+                const uniqueSponsorIds = new Set();
+                packagesResult.packages.forEach((pkg: any) => {
+                  pkg.interestedSponsors?.forEach((sponsor: any) => {
+                    uniqueSponsorIds.add(sponsor._id);
+                  });
+                });
+                interestedSponsorsCount = uniqueSponsorIds.size;
+              }
+            } catch (error) {
+              console.error(
+                "Error loading packages for event:",
+                event._id,
+                error,
+              );
+            }
+
+            return {
+              _id: event._id,
+              title: event.title,
+              description: event.description,
+              eventDate: event.eventDate,
+              expectedAttendees: event.expectedAttendees,
+              sponsorshipAmount: event.sponsorshipAmount,
+              category: event.category,
+              venue: event.venue,
+              status: event.status,
+              interestedSponsors: interestedSponsorsCount,
+            };
+          }),
+        );
         setEvents(transformedEvents);
       } else {
         console.error("Failed to load events:", result.message);
