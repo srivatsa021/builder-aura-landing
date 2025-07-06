@@ -443,9 +443,7 @@ export default function AgentDashboard() {
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">Deal Value</p>
                     <p className="text-lg font-semibold text-primary">
-                      {formatCurrency(
-                        deal.currentAmount || deal.proposedAmount,
-                      )}
+                      {formatCurrency(deal.amount)}
                     </p>
                   </div>
                 </div>
