@@ -277,21 +277,6 @@ export default function SponsorDashboard() {
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleExpressInterest(event._id)}
-                    disabled={interestedEvents.has(event._id)}
-                    variant={
-                      interestedEvents.has(event._id) ? "secondary" : "default"
-                    }
-                  >
-                    <Heart
-                      className={`h-4 w-4 mr-2 ${interestedEvents.has(event._id) ? "fill-current" : ""}`}
-                    />
-                    {interestedEvents.has(event._id)
-                      ? "Interested ✓"
-                      : "Express Interest"}
-                  </Button>
                 </div>
               </CardContent>
             </Card>
