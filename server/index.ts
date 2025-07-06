@@ -28,6 +28,16 @@ import {
   handleUpdateDealStatus,
   dealMemoryStore,
 } from "./routes/deals";
+import {
+  handleCreatePackages,
+  handleGetEventPackages,
+  handleExpressPackageInterest,
+  handleGetAllSponsors,
+  handleExpressSponsorInterest,
+  handleGetMutualInterests,
+  handleAssignAgentToInterest,
+  packageMemoryStore,
+} from "./routes/packages";
 import { authenticateToken } from "./middleware/auth";
 import { memoryStore } from "./database/memory-store";
 import { createDefaultAgent } from "./database/default-agent";
@@ -71,6 +81,7 @@ export function createServer() {
         users: memoryStore.getStats(),
         events: eventMemoryStore.getStats(),
         deals: dealMemoryStore.getStats(),
+        packages: packageMemoryStore.getStats(),
       },
     });
   });
@@ -116,6 +127,35 @@ export function createServer() {
     "/api/deals/:dealId/status",
     authenticateToken,
     handleUpdateDealStatus,
+  );
+
+  // Package routes
+  app.post(
+    "/api/events/:eventId/packages",
+    authenticateToken,
+    handleCreatePackages,
+  );
+  app.get("/api/events/:eventId/packages", handleGetEventPackages);
+  app.post(
+    "/api/packages/:packageId/interest",
+    authenticateToken,
+    handleExpressPackageInterest,
+  );
+
+  // Sponsor interest routes
+  app.get("/api/sponsors/all", authenticateToken, handleGetAllSponsors);
+  app.post(
+    "/api/sponsors/:sponsorId/interest",
+    authenticateToken,
+    handleExpressSponsorInterest,
+  );
+
+  // Agent routes for mutual interests
+  app.get("/api/interests/mutual", authenticateToken, handleGetMutualInterests);
+  app.post(
+    "/api/interests/:interestId/assign",
+    authenticateToken,
+    handleAssignAgentToInterest,
   );
 
   // Health check with database status

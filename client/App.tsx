@@ -12,6 +12,7 @@ import Signup from "./pages/Signup";
 import SponsorDashboard from "./pages/SponsorDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
+import SponsorsView from "./pages/SponsorsView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => {
               element={<OrganizerDashboard />}
             />
             <Route path="/agent-dashboard" element={<AgentDashboard />} />
+            <Route path="/sponsors" element={<SponsorsView />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

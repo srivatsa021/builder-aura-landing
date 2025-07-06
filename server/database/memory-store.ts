@@ -62,6 +62,10 @@ class MemoryStore {
     return this.users.get(id) || null;
   }
 
+  findAll() {
+    return this.users.values();
+  }
+
   getStats() {
     return {
       totalUsers: this.users.size,
