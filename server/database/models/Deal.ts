@@ -51,6 +51,11 @@ const DealSchema = new Schema<IDeal>(
       ref: "Event",
       required: true,
     },
+    packageId: {
+      type: Schema.Types.ObjectId,
+      ref: "Package",
+      required: true,
+    },
     sponsor: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -64,13 +69,16 @@ const DealSchema = new Schema<IDeal>(
     agent: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
 
-    proposedAmount: {
+    amount: {
       type: Number,
       required: true,
       min: 0,
+    },
+    description: {
+      type: String,
+      trim: true,
     },
     finalAmount: {
       type: Number,
