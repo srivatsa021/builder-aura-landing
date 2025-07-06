@@ -481,7 +481,7 @@ export default function AgentDashboard() {
                       </div>
                       <div className="flex items-center">
                         <Users className="h-4 w-4 mr-2" />
-                        {deal.sponsor.contactPerson}
+                        {deal.sponsor.name}
                       </div>
                     </div>
                   </div>
