@@ -752,22 +752,70 @@ export default function OrganizerDashboard() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sponsorshipAmount">
-                  Sponsorship Amount (₹) *
-                </Label>
-                <Input
-                  id="sponsorshipAmount"
-                  type="number"
-                  value={eventForm.sponsorshipAmount}
-                  onChange={(e) =>
-                    setEventForm({
-                      ...eventForm,
-                      sponsorshipAmount: e.target.value,
-                    })
+                <Label>Number of Sponsorship Packages *</Label>
+                <Select
+                  value={packageCount.toString()}
+                  onValueChange={(value) =>
+                    handlePackageCountChange(parseInt(value))
                   }
-                  required
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select number of packages" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} Package{num > 1 ? "s" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+
+            {/* Package Creation Fields */}
+            <div className="space-y-4">
+              <Label className="text-base font-semibold">
+                Sponsorship Packages
+              </Label>
+              {packages.map((pkg, index) => (
+                <Card key={index} className="p-4">
+                  <h4 className="font-medium mb-3">Package {index + 1}</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`amount-${index}`}>Amount (₹) *</Label>
+                      <Input
+                        id={`amount-${index}`}
+                        type="number"
+                        placeholder="e.g., 50000"
+                        value={pkg.amount}
+                        onChange={(e) =>
+                          handlePackageChange(index, "amount", e.target.value)
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`deliverables-${index}`}>
+                        Deliverables *
+                      </Label>
+                      <Input
+                        id={`deliverables-${index}`}
+                        placeholder="e.g., Logo placement, booth space"
+                        value={pkg.deliverables}
+                        onChange={(e) =>
+                          handlePackageChange(
+                            index,
+                            "deliverables",
+                            e.target.value,
+                          )
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
 
             <div className="space-y-2">
@@ -785,23 +833,7 @@ export default function OrganizerDashboard() {
               <Button type="submit" className="flex-1">
                 {editingEvent ? "Update Event" : "Create Event"}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsEventFormOpen(false);
-                  setEditingEvent(null);
-                  setEventForm({
-                    title: "",
-                    description: "",
-                    eventDate: "",
-                    expectedAttendees: "",
-                    sponsorshipAmount: "",
-                    category: "",
-                    venue: "",
-                  });
-                }}
-              >
+              <Button type="button" variant="outline" onClick={resetForm}>
                 Cancel
               </Button>
             </div>
