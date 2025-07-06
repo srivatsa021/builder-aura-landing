@@ -127,10 +127,10 @@ export default function AgentDashboard() {
     }
   };
 
-  const handleAssignToInterest = async (interestId: string) => {
+  const handleAssignToDeal = async (dealId: string) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/interests/${interestId}/assign`, {
+      const response = await fetch(`/api/deals/${dealId}/assign`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -139,17 +139,15 @@ export default function AgentDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        alert(
-          "Successfully assigned to this interest! Both parties will be notified.",
-        );
-        // Reload interests and deals
-        loadMutualInterests();
-        loadDeals();
+        alert("Successfully assigned to deal! You can now begin negotiations.");
+        // Reload pending deals and my deals
+        loadPendingDeals();
+        loadMyDeals();
       } else {
-        alert(result.message || "Failed to assign to interest");
+        alert(result.message || "Failed to assign to deal");
       }
     } catch (error) {
-      console.error("Error assigning to interest:", error);
+      console.error("Error assigning to deal:", error);
       alert("Network error. Please try again.");
     }
   };
