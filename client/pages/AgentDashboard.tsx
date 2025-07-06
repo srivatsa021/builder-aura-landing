@@ -345,38 +345,33 @@ export default function AgentDashboard() {
           </Card>
         </div>
 
-        {/* Mutual Interests Section */}
-        {mutualInterests.length > 0 && (
+        {/* Pending Deals Section */}
+        {pendingDeals.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">
-              Available Mutual Interests
-            </h2>
+            <h2 className="text-3xl font-bold mb-2">Available Deals</h2>
             <p className="text-muted-foreground mb-6">
-              Assign yourself to mediate these mutual interests
+              Assign yourself to mediate these sponsorship deals
             </p>
 
             <div className="grid gap-4">
-              {mutualInterests.map((interest) => (
-                <Card
-                  key={interest._id}
-                  className="border-l-4 border-l-primary"
-                >
+              {pendingDeals.map((deal) => (
+                <Card key={deal._id} className="border-l-4 border-l-primary">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold mb-2">
-                          Mutual Interest Match
+                          {deal.event.title}
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                           <div>
                             <h4 className="font-medium text-sm text-muted-foreground mb-1">
                               Sponsor
                             </h4>
                             <p className="font-medium">
-                              {interest.sponsor.companyName}
+                              {deal.sponsor.companyName}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              Contact: {interest.sponsor.name}
+                              Contact: {deal.sponsor.name}
                             </p>
                           </div>
                           <div>
@@ -384,11 +379,23 @@ export default function AgentDashboard() {
                               Organizer
                             </h4>
                             <p className="font-medium">
-                              {interest.organizer.clubName}
+                              {deal.organizer.clubName}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {interest.organizer.collegeName} •{" "}
-                              {interest.organizer.name}
+                              {deal.organizer.collegeName} •{" "}
+                              {deal.organizer.name}
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">
+                              Package Details
+                            </h4>
+                            <p className="font-medium">
+                              Package {deal.packageId.packageNumber}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {formatCurrency(deal.packageId.amount)} •{" "}
+                              {deal.packageId.deliverables}
                             </p>
                           </div>
                         </div>
