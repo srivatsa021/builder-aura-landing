@@ -77,7 +77,6 @@ export function createServer() {
         users: memoryStore.getStats(),
         events: eventMemoryStore.getStats(),
         deals: dealMemoryStore.getStats(),
-        packages: packageMemoryStore.getStats(),
       },
     });
   });
