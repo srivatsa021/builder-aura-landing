@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { AuthenticatedRequest } from "../middleware/auth";
 import { eventMemoryStore } from "./events";
 import { memoryStore } from "../database/memory-store";
+import { packageMemoryStore } from "./packages";
 
 // In-memory storage for deals and chats
 interface Deal {
