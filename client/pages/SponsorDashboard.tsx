@@ -162,12 +162,16 @@ export default function SponsorDashboard() {
       if (result.success) {
         if (!currentlyInterested && result.agentAssigned) {
           alert(
-            "Interest expressed! An agent has been automatically assigned to facilitate this deal.",
+            "✅ Interest expressed! An agent has been automatically assigned to facilitate this deal. Both you and the organizer will be notified of deal progress.",
           );
         } else if (!currentlyInterested) {
-          alert("Interest expressed in package!");
+          alert(
+            "✅ Interest expressed in package! You will be notified when an agent is assigned.",
+          );
         } else {
-          alert("Interest removed from package.");
+          alert(
+            "❌ Interest removed from package. Any associated deal has been cancelled.",
+          );
         }
 
         // Update package interest in the selected event
