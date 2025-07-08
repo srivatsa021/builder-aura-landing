@@ -236,26 +236,47 @@ export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
           "name companyName industry phone website",
         );
 
-      // If the request has a user (sponsor), mark packages they've expressed interest in
-      const packagesWithInterestStatus = packages.map((pkg) => {
-        const pkgObj = pkg.toObject();
-        if (req.user && req.user.role === "sponsor") {
-          console.log(
-            `📦 Checking interest for sponsor ${req.user.userId} in package ${pkg._id}`,
-          );
-          console.log(
-            `📦 Interested sponsors:`,
-            pkg.interestedSponsors.map((s: any) => s._id?.toString() || s),
-          );
-          pkgObj.hasExpressedInterest = pkg.interestedSponsors.some(
-            (sponsor: any) => sponsor._id.toString() === req.user.userId,
-          );
-          console.log(
-            `📦 Has expressed interest: ${pkgObj.hasExpressedInterest}`,
-          );
-        }
-        return pkgObj;
-      });
+      // If the request has a user (sponsor), mark packages they've expressed interest in and get deal info
+      const packagesWithInterestStatus = await Promise.all(
+        packages.map(async (pkg) => {
+          const pkgObj = pkg.toObject();
+          if (req.user && req.user.role === "sponsor") {
+            console.log(
+              `📦 Checking interest for sponsor ${req.user.userId} in package ${pkg._id}`,
+            );
+            console.log(
+              `📦 Interested sponsors:`,
+              pkg.interestedSponsors.map((s: any) => s._id?.toString() || s),
+            );
+            pkgObj.hasExpressedInterest = pkg.interestedSponsors.some(
+              (sponsor: any) => sponsor._id.toString() === req.user.userId,
+            );
+            console.log(
+              `📦 Has expressed interest: ${pkgObj.hasExpressedInterest}`,
+            );
+
+            // Get deal information if sponsor has expressed interest
+            if (pkgObj.hasExpressedInterest) {
+              try {
+                const deal = await Deal.findOne({
+                  packageId: pkg._id,
+                  sponsor: req.user.userId,
+                  status: { $nin: ["cancelled"] },
+                }).populate("agent", "name");
+
+                if (deal) {
+                  pkgObj.agentAssigned = !!deal.agent;
+                  pkgObj.agentName = deal.agent?.name;
+                  pkgObj.dealStatus = deal.status;
+                }
+              } catch (dealError) {
+                console.error("Error fetching deal info:", dealError);
+              }
+            }
+          }
+          return pkgObj;
+        }),
+      );
 
       res.json({
         success: true,
