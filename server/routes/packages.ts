@@ -159,10 +159,36 @@ export const handleCreatePackages: RequestHandler = async (
       });
     } else {
       console.log("💾 Using memory store for creating packages");
-      // Fallback to memory store implementation
-      res.status(503).json({
-        success: false,
-        message: "Database not available",
+
+      const createdPackages = [];
+      for (let i = 0; i < packages.length; i++) {
+        const { amount, deliverables } = packages[i];
+
+        if (!amount || !deliverables) {
+          return res.status(400).json({
+            success: false,
+            message: `Package ${i + 1}: Amount and deliverables are required`,
+          });
+        }
+
+        const packageData = {
+          eventId,
+          packageNumber: i + 1,
+          amount: parseInt(amount),
+          deliverables,
+          interestedSponsors: [],
+          status: "available" as const,
+        };
+
+        const createdPackage =
+          await packageMemoryStore.createPackage(packageData);
+        createdPackages.push(createdPackage);
+      }
+
+      res.status(201).json({
+        success: true,
+        packages: createdPackages,
+        message: "Packages created successfully",
       });
     }
   } catch (error) {
