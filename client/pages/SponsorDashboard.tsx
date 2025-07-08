@@ -133,11 +133,15 @@ export default function SponsorDashboard() {
     setIsModalOpen(true);
   };
 
-  const handleExpressInterest = async (packageId: string) => {
+  const handleToggleInterest = async (
+    packageId: string,
+    currentlyInterested: boolean,
+  ) => {
     try {
       const token = localStorage.getItem("token");
+      const method = currentlyInterested ? "DELETE" : "POST";
       const response = await fetch(`/api/packages/${packageId}/interest`, {
-        method: "POST",
+        method: method,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -145,14 +149,14 @@ export default function SponsorDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        if (result.agentAssigned) {
+        if (!currentlyInterested && result.agentAssigned) {
           alert(
             "Interest expressed! An agent has been automatically assigned to facilitate this deal.",
           );
+        } else if (!currentlyInterested) {
+          alert("Interest expressed in package!");
         } else {
-          alert(
-            "Interest expressed in package! The organizer will be notified.",
-          );
+          alert("Interest removed from package.");
         }
 
         // Update package interest in the selected event
@@ -161,18 +165,20 @@ export default function SponsorDashboard() {
             pkg._id === packageId
               ? {
                   ...pkg,
-                  hasExpressedInterest: true,
-                  agentAssigned: result.agentAssigned,
+                  hasExpressedInterest: !currentlyInterested,
+                  agentAssigned: !currentlyInterested
+                    ? result.agentAssigned
+                    : false,
                 }
               : pkg,
           );
           setSelectedEvent({ ...selectedEvent, packages: updatedPackages });
         }
       } else {
-        alert(result.message || "Failed to express interest");
+        alert(result.message || "Failed to update interest");
       }
     } catch (error) {
-      console.error("Error expressing interest:", error);
+      console.error("Error updating interest:", error);
       alert("Network error. Please try again.");
     }
   };
