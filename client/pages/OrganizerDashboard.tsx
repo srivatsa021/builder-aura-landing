@@ -725,7 +725,7 @@ export default function OrganizerDashboard() {
                         variant="outline"
                         size="sm"
                         className="flex-1"
-                        onClick={() => handleViewInterestedSponsors(event)}
+                        onClick={() => handleViewPackageStatus(event)}
                       >
                         <Users className="h-4 w-4 mr-2" />
                         Interested ({event.interestedSponsors})
