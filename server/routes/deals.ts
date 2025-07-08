@@ -72,6 +72,10 @@ class DealMemoryStore {
     );
   }
 
+  async getAllDeals(): Promise<Deal[]> {
+    return Array.from(this.deals.values());
+  }
+
   async getDealById(dealId: string): Promise<Deal | null> {
     return this.deals.get(dealId) || null;
   }
