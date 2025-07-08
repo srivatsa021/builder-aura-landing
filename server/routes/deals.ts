@@ -748,10 +748,53 @@ export const handleGetMyDeals: RequestHandler = async (
         deals: myDeals,
       });
     } else {
-      console.log("💾 Database not available");
-      return res.status(503).json({
-        success: false,
-        message: "Database not available",
+      console.log("💾 Using memory store for getting my deals");
+
+      // Get deals assigned to current agent from memory store
+      const myDeals = await dealMemoryStore.getDealsByAgent(req.user.userId);
+
+      // Enrich with user and event data
+      const enrichedDeals = [];
+      for (const deal of myDeals) {
+        const event = await eventMemoryStore.getEventById(deal.eventId);
+        const sponsor = await memoryStore.findUserById(deal.sponsorId);
+        const organizer = await memoryStore.findUserById(deal.organizerId);
+
+        if (event && sponsor && organizer) {
+          enrichedDeals.push({
+            _id: deal._id,
+            event: {
+              _id: event._id,
+              title: event.title,
+              eventDate: event.eventDate,
+            },
+            sponsor: {
+              _id: sponsor._id,
+              name: sponsor.name,
+              companyName: sponsor.companyName,
+            },
+            organizer: {
+              _id: organizer._id,
+              name: organizer.name,
+              clubName: organizer.clubName,
+              collegeName: organizer.collegeName,
+            },
+            packageId: {
+              _id: `pkg_${deal.eventId}`,
+              packageNumber: 1, // Simplified for memory store
+              amount: deal.proposedAmount,
+              deliverables: "Package deliverables",
+            },
+            amount: deal.proposedAmount,
+            status: deal.status,
+            createdAt: deal.createdAt,
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        deals: enrichedDeals,
       });
     }
   } catch (error) {
