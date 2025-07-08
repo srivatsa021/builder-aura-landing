@@ -177,61 +177,39 @@ export const handleGetInterestedSponsors: RequestHandler = async (
       }
       console.log("📦 Getting interested sponsors");
 
-      // Get packages for this event with interested sponsors populated
+      // Get packages for this event with anonymous interest counts
       const packages = await Package.find({ eventId })
-        .populate(
-          "interestedSponsors",
-          "name companyName industry phone website",
-        )
+        .populate("selectedSponsor", "companyName")
         .sort({ packageNumber: 1 });
 
-      // Collect all unique sponsor IDs with their package interests
-      const sponsorInterestMap: Record<
-        string,
-        {
-          sponsor: any;
-          interestedPackages: Array<{
-            packageNumber: number;
-            amount: number;
-            deliverables: string;
-          }>;
-        }
-      > = {};
+      // Get deals for packages to check agent assignments
+      const deals = await Deal.find({
+        event: eventId,
+        packageId: { $in: packages.map((p) => p._id) },
+      }).populate("agent", "name");
 
-      // Process package interests
-      for (const pkg of packages) {
-        for (const sponsor of pkg.interestedSponsors) {
-          const sponsorId = sponsor._id.toString();
-          if (!sponsorInterestMap[sponsorId]) {
-            sponsorInterestMap[sponsorId] = {
-              sponsor: {
-                _id: sponsor._id,
-                name: sponsor.name,
-                companyName: sponsor.companyName,
-                industry: sponsor.industry,
-                website: sponsor.website,
-                phone: sponsor.phone,
-              },
-              interestedPackages: [],
-            };
-          }
-          sponsorInterestMap[sponsorId].interestedPackages.push({
-            packageNumber: pkg.packageNumber,
-            amount: pkg.amount,
-            deliverables: pkg.deliverables,
-          });
-        }
-      }
-
-      // Convert to array format
-      const sponsors = Object.values(sponsorInterestMap).map((item) => ({
-        ...item.sponsor,
-        interestedPackages: item.interestedPackages,
-      }));
+      // Create packages with interest info and agent status
+      const packageInfo = packages.map((pkg) => {
+        const deal = deals.find(
+          (d) => d.packageId.toString() === pkg._id.toString(),
+        );
+        return {
+          packageNumber: pkg.packageNumber,
+          amount: pkg.amount,
+          deliverables: pkg.deliverables,
+          status: pkg.status,
+          interestCount: pkg.interestedSponsors.length,
+          hasSelectedSponsor: !!pkg.selectedSponsor,
+          selectedSponsorCompany: pkg.selectedSponsor?.companyName,
+          agentAssigned: !!deal?.agent,
+          agentName: deal?.agent?.name,
+          dealStatus: deal?.status,
+        };
+      });
 
       res.json({
         success: true,
-        sponsors,
+        packages: packageInfo,
       });
     } else {
       console.log("💾 Database not available");
