@@ -68,6 +68,25 @@ class PackageMemoryStore {
     return false;
   }
 
+  async removeInterest(packageId: string, sponsorId: string): Promise<boolean> {
+    const pkg = this.packages.get(packageId);
+    if (pkg && pkg.interestedSponsors.includes(sponsorId)) {
+      pkg.interestedSponsors = pkg.interestedSponsors.filter(
+        (id) => id !== sponsorId,
+      );
+
+      // Reset package status if this was the selected sponsor
+      if (pkg.selectedSponsor === sponsorId) {
+        pkg.selectedSponsor = undefined;
+        pkg.status = "available";
+      }
+
+      pkg.updatedAt = new Date().toISOString();
+      return true;
+    }
+    return false;
+  }
+
   async selectSponsor(packageId: string, sponsorId: string): Promise<boolean> {
     const pkg = this.packages.get(packageId);
     if (pkg) {
