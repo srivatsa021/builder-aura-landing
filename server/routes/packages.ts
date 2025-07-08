@@ -424,6 +424,7 @@ export const handleExpressPackageInterest: RequestHandler = async (
           // Import dealMemoryStore from deals.ts
           const { dealMemoryStore } = await import("./deals");
 
+          console.log("💾 Creating deal for package interest in memory store");
           const newDeal = await dealMemoryStore.createDeal({
             eventId: packageDoc.eventId,
             sponsorId: req.user.userId,
@@ -432,6 +433,7 @@ export const handleExpressPackageInterest: RequestHandler = async (
             status: "negotiating",
             proposedAmount: packageDoc.amount,
           });
+          console.log("💾 Deal created:", newDeal);
 
           res.json({
             success: true,
