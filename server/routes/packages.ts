@@ -6,6 +6,7 @@ import { Event } from "../database/models/Event";
 import { Deal } from "../database/models/Deal";
 import mongoose from "mongoose";
 import { memoryStore } from "../database/memory-store";
+import { eventMemoryStore } from "./events";
 
 // Memory store for packages when MongoDB is not available
 interface PackageData {
