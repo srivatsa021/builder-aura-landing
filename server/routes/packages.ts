@@ -251,8 +251,15 @@ export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
       const packagesWithInterestStatus = packages.map((pkg) => {
         const pkgObj = { ...pkg };
         if (req.user && req.user.role === "sponsor") {
+          console.log(
+            `💾 Checking interest for sponsor ${req.user.userId} in package ${pkg._id}`,
+          );
+          console.log(`💾 Interested sponsors:`, pkg.interestedSponsors);
           pkgObj.hasExpressedInterest = pkg.interestedSponsors.includes(
             req.user.userId,
+          );
+          console.log(
+            `💾 Has expressed interest: ${pkgObj.hasExpressedInterest}`,
           );
         }
         return pkgObj;
