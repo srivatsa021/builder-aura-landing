@@ -1015,7 +1015,7 @@ export default function OrganizerDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Interested Sponsors Modal */}
+      {/* Package Status Modal */}
       <Dialog
         open={isInterestedSponsorsOpen}
         onOpenChange={setIsInterestedSponsorsOpen}
@@ -1023,125 +1023,90 @@ export default function OrganizerDashboard() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              Interested Sponsors - {selectedEventForSponsors?.title}
+              Package Status - {selectedEventForSponsors?.title}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {interestedSponsors.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                No sponsors have expressed interest yet
+                No packages found for this event
               </p>
             ) : (
-              interestedSponsors.map((sponsor) => (
-                <Card key={sponsor._id} className="border-l-4 border-l-primary">
+              interestedSponsors.map((pkg: any) => (
+                <Card
+                  key={pkg.packageNumber}
+                  className="border-l-4 border-l-primary"
+                >
                   <CardContent className="p-4">
                     <div className="space-y-3">
-                      <div>
-                        <h4 className="font-medium text-lg">
-                          {sponsor.companyName}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {sponsor.industry}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Contact: {sponsor.name} • {sponsor.phone}
-                        </p>
-                        {sponsor.website && (
-                          <a
-                            href={sponsor.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary text-sm hover:underline"
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-lg">
+                            Package {pkg.packageNumber}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {pkg.deliverables}
+                          </p>
+                          <p className="text-lg font-semibold text-primary mt-1">
+                            {formatCurrency(pkg.amount)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <Badge
+                            className={`${
+                              pkg.status === "selected"
+                                ? "bg-green-500"
+                                : pkg.interestCount > 0
+                                  ? "bg-blue-500"
+                                  : "bg-gray-500"
+                            } text-white`}
                           >
-                            Visit Website
-                          </a>
-                        )}
+                            {pkg.status === "selected"
+                              ? "Selected"
+                              : pkg.interestCount > 0
+                                ? `${pkg.interestCount} Interested`
+                                : "Available"}
+                          </Badge>
+                        </div>
                       </div>
 
-                      {/* Show interested packages */}
-                      {sponsor.interestedPackages &&
-                        sponsor.interestedPackages.length > 0 && (
-                          <div className="bg-muted/50 rounded-lg p-3">
-                            <h5 className="font-medium text-sm mb-2 flex items-center gap-2">
-                              <DollarSign className="h-4 w-4" />
-                              Interested in these packages:
-                            </h5>
-                            <div className="space-y-2">
-                              {sponsor.interestedPackages.map(
-                                (pkg: any, idx: number) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-start justify-between text-sm bg-background/50 rounded p-3"
-                                  >
-                                    <div className="flex-1">
-                                      <span className="font-medium text-primary">
-                                        Package {pkg.packageNumber}
-                                      </span>
-                                      <div className="text-xs text-muted-foreground mt-1">
-                                        {pkg.deliverables}
-                                      </div>
-                                      <div className="text-xs font-semibold text-primary mt-1">
-                                        {formatCurrency(pkg.amount)}
-                                      </div>
-                                    </div>
-                                    <div className="flex gap-2 ml-3">
-                                      <Button
-                                        size="sm"
-                                        variant="default"
-                                        onClick={() =>
-                                          handlePackageInterestResponse(
-                                            sponsor._id,
-                                            pkg.packageNumber,
-                                            "accept",
-                                          )
-                                        }
-                                      >
-                                        <Check className="h-3 w-3 mr-1" />
-                                        Accept
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() =>
-                                          handlePackageInterestResponse(
-                                            sponsor._id,
-                                            pkg.packageNumber,
-                                            "decline",
-                                          )
-                                        }
-                                      >
-                                        <X className="h-3 w-3 mr-1" />
-                                        Decline
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ),
-                              )}
-                            </div>
+                      {/* Show agent assignment status */}
+                      {pkg.agentAssigned && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-green-600" />
+                            <span className="text-sm font-medium text-green-800">
+                              Agent Assigned: {pkg.agentName}
+                            </span>
                           </div>
-                        )}
+                          {pkg.dealStatus && (
+                            <p className="text-xs text-green-600 mt-1">
+                              Deal Status: {pkg.dealStatus}
+                            </p>
+                          )}
+                          {pkg.selectedSponsorCompany && (
+                            <p className="text-xs text-green-600 mt-1">
+                              Selected Sponsor: {pkg.selectedSponsorCompany}
+                            </p>
+                          )}
+                        </div>
+                      )}
 
-                      <div className="flex gap-3">
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            handleRespondToSponsor(sponsor._id, "accept")
-                          }
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Accept & Assign Agent
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            handleRespondToSponsor(sponsor._id, "decline")
-                          }
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Decline
-                        </Button>
-                      </div>
+                      {/* Show interest without revealing sponsor names */}
+                      {pkg.interestCount > 0 && !pkg.agentAssigned && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <div className="flex items-center gap-2">
+                            <Eye className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">
+                              {pkg.interestCount} sponsor
+                              {pkg.interestCount > 1 ? "s" : ""} interested
+                            </span>
+                          </div>
+                          <p className="text-xs text-blue-600 mt-1">
+                            Waiting for sponsor to proceed with selection
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
