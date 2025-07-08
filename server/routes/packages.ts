@@ -233,9 +233,23 @@ export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
       });
     } else {
       console.log("💾 Using memory store for getting packages");
-      res.status(503).json({
-        success: false,
-        message: "Database not available",
+
+      const packages = await packageMemoryStore.getPackagesByEvent(eventId);
+
+      // Add interest status for current user if they're a sponsor
+      const packagesWithInterestStatus = packages.map((pkg) => {
+        const pkgObj = { ...pkg };
+        if (req.user && req.user.role === "sponsor") {
+          pkgObj.hasExpressedInterest = pkg.interestedSponsors.includes(
+            req.user.userId,
+          );
+        }
+        return pkgObj;
+      });
+
+      res.json({
+        success: true,
+        packages: packagesWithInterestStatus,
       });
     }
   } catch (error) {
