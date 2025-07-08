@@ -365,6 +365,7 @@ export const handleExpressPackageInterest: RequestHandler = async (
         }
 
         // Create deal immediately with assigned agent
+        console.log("📦 Creating deal for package interest in MongoDB");
         const newDeal = new Deal({
           event: packageDoc.eventId,
           packageId: packageDoc._id,
@@ -377,6 +378,7 @@ export const handleExpressPackageInterest: RequestHandler = async (
         });
 
         await newDeal.save();
+        console.log("📦 Deal created:", newDeal);
 
         // Update package status to selected and assign agent
         packageDoc.selectedSponsor = req.user.userId as any;
