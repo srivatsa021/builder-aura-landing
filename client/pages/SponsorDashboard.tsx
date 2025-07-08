@@ -27,6 +27,7 @@ interface Package {
   deliverables: string;
   status: string;
   hasExpressedInterest?: boolean;
+  agentAssigned?: boolean;
 }
 
 interface Event {
