@@ -115,7 +115,16 @@ export default function OrganizerDashboard() {
     // Load real data from API
     loadEvents();
     loadSponsors();
-  }, []);
+
+    // Set up auto-refresh for real-time status updates
+    const refreshInterval = setInterval(() => {
+      if (isInterestedSponsorsOpen && selectedEventForSponsors) {
+        handleViewPackageStatus(selectedEventForSponsors);
+      }
+    }, 10000); // Refresh every 10 seconds when package status modal is open
+
+    return () => clearInterval(refreshInterval);
+  }, [isInterestedSponsorsOpen, selectedEventForSponsors]);
 
   const loadEvents = async () => {
     try {
