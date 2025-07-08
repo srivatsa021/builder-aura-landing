@@ -180,7 +180,7 @@ export const handleGetInterestedSponsors: RequestHandler = async (
           message: "You can only view sponsors for your own events",
         });
       }
-      console.log("📦 Getting interested sponsors");
+      console.log("��� Getting interested sponsors");
 
       // Get packages for this event with anonymous interest counts
       const packages = await Package.find({ eventId })
@@ -222,19 +222,48 @@ export const handleGetInterestedSponsors: RequestHandler = async (
       // Get packages from memory store
       const packages = await packageMemoryStore.getPackagesByEvent(eventId);
 
-      // Create packages with interest info (no agent assignment in memory store)
-      const packageInfo = packages.map((pkg) => ({
-        packageNumber: pkg.packageNumber,
-        amount: pkg.amount,
-        deliverables: pkg.deliverables,
-        status: pkg.status,
-        interestCount: pkg.interestedSponsors.length,
-        hasSelectedSponsor: !!pkg.selectedSponsor,
-        selectedSponsorCompany: null, // Can't get company name from memory store easily
-        agentAssigned: false, // No automatic agent assignment in memory store
-        agentName: null,
-        dealStatus: null,
-      }));
+      // Get deals from memory store for agent status
+      const allDeals = await dealMemoryStore.getAllDeals();
+      const eventDeals = allDeals.filter((d) => d.eventId === eventId);
+
+      // Create packages with interest info and agent assignment
+      const packageInfo = await Promise.all(
+        packages.map(async (pkg) => {
+          const deal = eventDeals.find(
+            (d) =>
+              d.eventId === pkg.eventId &&
+              pkg.interestedSponsors.some(
+                (sponsorId) => d.sponsorId === sponsorId,
+              ),
+          );
+
+          let agentName = null;
+          let selectedSponsorCompany = null;
+
+          if (deal?.agentId) {
+            const agent = await memoryStore.findUserById(deal.agentId);
+            agentName = agent?.name || null;
+          }
+
+          if (pkg.selectedSponsor) {
+            const sponsor = await memoryStore.findUserById(pkg.selectedSponsor);
+            selectedSponsorCompany = sponsor?.companyName || null;
+          }
+
+          return {
+            packageNumber: pkg.packageNumber,
+            amount: pkg.amount,
+            deliverables: pkg.deliverables,
+            status: pkg.status,
+            interestCount: pkg.interestedSponsors.length,
+            hasSelectedSponsor: !!pkg.selectedSponsor,
+            selectedSponsorCompany,
+            agentAssigned: !!deal?.agentId,
+            agentName,
+            dealStatus: deal?.status || null,
+          };
+        }),
+      );
 
       res.json({
         success: true,
