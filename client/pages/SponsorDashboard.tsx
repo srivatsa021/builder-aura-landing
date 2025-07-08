@@ -493,11 +493,36 @@ export default function SponsorDashboard() {
                                         </p>
                                       </div>
                                       {pkg.agentAssigned && (
-                                        <div className="mt-2">
+                                        <div className="mt-2 space-y-2">
                                           <Badge className="bg-green-500 text-white">
                                             <Users className="h-3 w-3 mr-1" />
                                             Agent Assigned
+                                            {pkg.agentName &&
+                                              `: ${pkg.agentName}`}
                                           </Badge>
+                                          {pkg.dealStatus && (
+                                            <div className="flex items-center gap-2">
+                                              <Badge
+                                                className={`${
+                                                  pkg.dealStatus === "approved"
+                                                    ? "bg-blue-500 text-white"
+                                                    : pkg.dealStatus ===
+                                                        "signed"
+                                                      ? "bg-purple-500 text-white"
+                                                      : pkg.dealStatus ===
+                                                          "completed"
+                                                        ? "bg-green-600 text-white"
+                                                        : "bg-gray-500 text-white"
+                                                }`}
+                                              >
+                                                Status:{" "}
+                                                {pkg.dealStatus
+                                                  .charAt(0)
+                                                  .toUpperCase() +
+                                                  pkg.dealStatus.slice(1)}
+                                              </Badge>
+                                            </div>
+                                          )}
                                         </div>
                                       )}
                                     </div>
