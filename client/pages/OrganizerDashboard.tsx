@@ -713,24 +713,18 @@ export default function OrganizerDashboard() {
                       <MapPin className="h-4 w-4 mr-2" />
                       {event.venue}
                     </div>
-                    <div className="flex items-center text-sm font-semibold text-primary">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      {formatCurrency(event.sponsorshipAmount)}
-                    </div>
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    {event.interestedSponsors > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleViewPackageStatus(event)}
-                      >
-                        <Users className="h-4 w-4 mr-2" />
-                        Interested ({event.interestedSponsors})
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleViewPackageStatus(event)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Package Status
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
