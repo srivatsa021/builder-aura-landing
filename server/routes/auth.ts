@@ -9,6 +9,10 @@ import mongoose from "mongoose";
 
 export const handleLogin: RequestHandler = async (req, res) => {
   try {
+    console.log("🔐 Login handler called");
+    console.log("🔐 Request body:", req.body);
+    console.log("🔐 Request headers:", req.headers);
+
     const { email, password, role } = req.body as LoginRequest;
 
     // Validate input
