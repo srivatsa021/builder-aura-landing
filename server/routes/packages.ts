@@ -221,8 +221,18 @@ export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
       const packagesWithInterestStatus = packages.map((pkg) => {
         const pkgObj = pkg.toObject();
         if (req.user && req.user.role === "sponsor") {
+          console.log(
+            `📦 Checking interest for sponsor ${req.user.userId} in package ${pkg._id}`,
+          );
+          console.log(
+            `📦 Interested sponsors:`,
+            pkg.interestedSponsors.map((s: any) => s._id?.toString() || s),
+          );
           pkgObj.hasExpressedInterest = pkg.interestedSponsors.some(
             (sponsor: any) => sponsor._id.toString() === req.user.userId,
+          );
+          console.log(
+            `📦 Has expressed interest: ${pkgObj.hasExpressedInterest}`,
           );
         }
         return pkgObj;
