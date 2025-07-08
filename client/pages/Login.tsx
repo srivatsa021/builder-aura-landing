@@ -37,6 +37,13 @@ export default function Login() {
         body: JSON.stringify(loginData),
       });
 
+      // Check if response is ok before parsing JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Login failed with status:", response.status, errorText);
+        throw new Error(`Login failed: ${response.status} - ${errorText}`);
+      }
+
       const result = await response.json();
 
       if (result.success) {
