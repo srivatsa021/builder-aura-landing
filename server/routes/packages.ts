@@ -287,23 +287,54 @@ export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
 
       const packages = await packageMemoryStore.getPackagesByEvent(eventId);
 
-      // Add interest status for current user if they're a sponsor
-      const packagesWithInterestStatus = packages.map((pkg) => {
-        const pkgObj = { ...pkg };
-        if (req.user && req.user.role === "sponsor") {
-          console.log(
-            `💾 Checking interest for sponsor ${req.user.userId} in package ${pkg._id}`,
-          );
-          console.log(`💾 Interested sponsors:`, pkg.interestedSponsors);
-          pkgObj.hasExpressedInterest = pkg.interestedSponsors.includes(
-            req.user.userId,
-          );
-          console.log(
-            `💾 Has expressed interest: ${pkgObj.hasExpressedInterest}`,
-          );
-        }
-        return pkgObj;
-      });
+      // Add interest status and deal info for current user if they're a sponsor
+      const packagesWithInterestStatus = await Promise.all(
+        packages.map(async (pkg) => {
+          const pkgObj = { ...pkg };
+          if (req.user && req.user.role === "sponsor") {
+            console.log(
+              `💾 Checking interest for sponsor ${req.user.userId} in package ${pkg._id}`,
+            );
+            console.log(`💾 Interested sponsors:`, pkg.interestedSponsors);
+            pkgObj.hasExpressedInterest = pkg.interestedSponsors.includes(
+              req.user.userId,
+            );
+            console.log(
+              `💾 Has expressed interest: ${pkgObj.hasExpressedInterest}`,
+            );
+
+            // Get deal information if sponsor has expressed interest
+            if (pkgObj.hasExpressedInterest) {
+              try {
+                const { dealMemoryStore } = await import("./deals");
+                const allDeals = await dealMemoryStore.getAllDeals();
+                const deal = allDeals.find(
+                  (d) =>
+                    d.eventId === pkg.eventId &&
+                    d.sponsorId === req.user.userId &&
+                    !["cancelled"].includes(d.status),
+                );
+
+                if (deal) {
+                  pkgObj.agentAssigned = !!deal.agentId;
+                  pkgObj.dealStatus = deal.status;
+
+                  if (deal.agentId) {
+                    const agent = await memoryStore.findUserById(deal.agentId);
+                    pkgObj.agentName = agent?.name;
+                  }
+                }
+              } catch (dealError) {
+                console.error(
+                  "Error fetching deal info from memory store:",
+                  dealError,
+                );
+              }
+            }
+          }
+          return pkgObj;
+        }),
+      );
 
       res.json({
         success: true,
