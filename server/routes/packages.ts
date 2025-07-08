@@ -399,17 +399,28 @@ export const handleExpressPackageInterest: RequestHandler = async (
       // Select sponsor and assign agent (simplified for memory store)
       await packageMemoryStore.selectSponsor(packageId, req.user.userId);
 
-      // Create a deal in memory store (simplified version)
+      // Create a deal in memory store
       const event = await eventMemoryStore.getEventById(packageDoc.eventId);
       if (event) {
-        // For memory store, we'll create a simplified deal
         const defaultAgent = await memoryStore.findUserByEmail("a@gmail.com");
         if (defaultAgent) {
-          // Note: In a real implementation, you might want to create a deals memory store too
+          // Import dealMemoryStore from deals.ts
+          const { dealMemoryStore } = await import("./deals");
+
+          const newDeal = await dealMemoryStore.createDeal({
+            eventId: packageDoc.eventId,
+            sponsorId: req.user.userId,
+            organizerId: event.organizer._id,
+            agentId: defaultAgent._id,
+            status: "negotiating",
+            proposedAmount: packageDoc.amount,
+          });
+
           res.json({
             success: true,
             message:
               "Interest expressed! An agent has been automatically assigned to facilitate this deal.",
+            dealId: newDeal._id,
             agentAssigned: true,
           });
         } else {
