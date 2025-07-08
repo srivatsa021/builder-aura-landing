@@ -176,7 +176,18 @@ export default function AgentDashboard() {
             deal._id === dealId ? { ...deal, status: newStatus } : deal,
           ),
         );
-        alert(`Deal status updated to: ${newStatus}`);
+
+        const statusMessages = {
+          approved:
+            "Deal approved! Both sponsor and organizer have been notified.",
+          signed: "Deal signed! Both parties will see the updated status.",
+          completed: "Deal completed successfully! Congratulations!",
+        };
+
+        alert(
+          statusMessages[newStatus as keyof typeof statusMessages] ||
+            `Deal status updated to: ${newStatus}`,
+        );
       } else {
         alert(result.message || "Failed to update deal status");
       }
