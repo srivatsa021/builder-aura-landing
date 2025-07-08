@@ -9,11 +9,12 @@ import mongoose from "mongoose";
 
 export const handleLogin: RequestHandler = async (req, res) => {
   try {
-    // Ensure we only read the body once
-    if (!req.body) {
+    // Ensure we only read the body once and it's properly parsed
+    if (!req.body || typeof req.body !== "object") {
+      console.error("Login handler: Invalid or missing request body");
       return res.status(400).json({
         success: false,
-        message: "Request body is missing",
+        message: "Invalid request body",
       });
     }
 
