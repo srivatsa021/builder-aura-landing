@@ -421,46 +421,6 @@ export default function OrganizerDashboard() {
     }
   };
 
-  const handlePackageInterestResponse = async (
-    sponsorId: string,
-    packageNumber: number,
-    action: "accept" | "decline",
-  ) => {
-    if (!selectedEventForSponsors) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `/api/events/${selectedEventForSponsors._id}/packages/${packageNumber}/sponsors/${sponsorId}/respond`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ action }),
-        },
-      );
-
-      const result = await response.json();
-      if (result.success) {
-        alert(
-          action === "accept"
-            ? "Package interest accepted! An agent will be assigned to mediate the deal."
-            : "Package interest declined.",
-        );
-
-        // Refresh the interested sponsors list
-        handleViewInterestedSponsors(selectedEventForSponsors);
-      } else {
-        alert(result.message || `Failed to ${action} package interest`);
-      }
-    } catch (error) {
-      console.error("Error responding to package interest:", error);
-      alert("Network error. Please try again.");
-    }
-  };
-
   const handleViewPackageStatus = async (event: Event) => {
     try {
       const token = localStorage.getItem("token");
