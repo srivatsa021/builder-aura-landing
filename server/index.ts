@@ -147,6 +147,11 @@ export function createServer() {
     authenticateToken,
     handleExpressPackageInterest,
   );
+  app.delete(
+    "/api/packages/:packageId/interest",
+    authenticateToken,
+    handleExpressPackageInterest,
+  );
   app.post(
     "/api/events/:eventId/packages/:packageNumber/sponsors/:sponsorId/respond",
     authenticateToken,
