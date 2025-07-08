@@ -339,9 +339,31 @@ export const handleExpressPackageInterest: RequestHandler = async (
       });
     } else {
       console.log("💾 Using memory store for expressing package interest");
-      res.status(503).json({
-        success: false,
-        message: "Database not available",
+
+      const packageDoc = await packageMemoryStore.getPackageById(packageId);
+      if (!packageDoc) {
+        return res.status(404).json({
+          success: false,
+          message: "Package not found",
+        });
+      }
+
+      // Check if already interested
+      if (packageDoc.interestedSponsors.includes(req.user.userId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Already expressed interest in this package",
+        });
+      }
+
+      // Express interest
+      await packageMemoryStore.expressInterest(packageId, req.user.userId);
+
+      // For memory store, we'll create a simplified response without automatic agent assignment
+      res.json({
+        success: true,
+        message: "Interest expressed in package successfully!",
+        agentAssigned: false,
       });
     }
   } catch (error) {
