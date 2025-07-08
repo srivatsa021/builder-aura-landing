@@ -166,7 +166,7 @@ export const handleExpressPackageInterest: RequestHandler = async (
     if (isMongoConnected) {
       console.log("📦 Using MongoDB for expressing package interest");
 
-      const packageDoc = await Package.findById(packageId);
+      const packageDoc = await Package.findById(packageId).populate("eventId");
       if (!packageDoc) {
         return res.status(404).json({
           success: false,
@@ -184,11 +184,44 @@ export const handleExpressPackageInterest: RequestHandler = async (
 
       // Add sponsor to interested list
       packageDoc.interestedSponsors.push(req.user.userId as any);
+
+      // Get available agent (for now, use the default agent)
+      const availableAgent = await User.findOne({
+        role: "agent",
+        isActive: true,
+      });
+      if (!availableAgent) {
+        return res.status(503).json({
+          success: false,
+          message: "No agents available at the moment",
+        });
+      }
+
+      // Create deal immediately with assigned agent
+      const newDeal = new Deal({
+        event: packageDoc.eventId,
+        packageId: packageDoc._id,
+        sponsor: req.user.userId,
+        organizer: (packageDoc.eventId as any).organizer,
+        agent: availableAgent._id,
+        amount: packageDoc.amount,
+        description: `Package ${packageDoc.packageNumber}: ${packageDoc.deliverables}`,
+        status: "negotiating",
+      });
+
+      await newDeal.save();
+
+      // Update package status to selected and assign agent
+      packageDoc.selectedSponsor = req.user.userId as any;
+      packageDoc.status = "selected";
       await packageDoc.save();
 
       res.json({
         success: true,
-        message: "Interest expressed in package successfully",
+        message:
+          "Interest expressed! An agent has been automatically assigned to facilitate this deal.",
+        dealId: newDeal._id,
+        agentAssigned: true,
       });
     } else {
       console.log("💾 Using memory store for expressing package interest");
