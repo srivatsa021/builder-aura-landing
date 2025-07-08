@@ -212,10 +212,28 @@ export const handleGetInterestedSponsors: RequestHandler = async (
         packages: packageInfo,
       });
     } else {
-      console.log("💾 Database not available");
-      return res.status(503).json({
-        success: false,
-        message: "Database not available",
+      console.log("💾 Using memory store for getting package status");
+
+      // Get packages from memory store
+      const packages = await packageMemoryStore.getPackagesByEvent(eventId);
+
+      // Create packages with interest info (no agent assignment in memory store)
+      const packageInfo = packages.map((pkg) => ({
+        packageNumber: pkg.packageNumber,
+        amount: pkg.amount,
+        deliverables: pkg.deliverables,
+        status: pkg.status,
+        interestCount: pkg.interestedSponsors.length,
+        hasSelectedSponsor: !!pkg.selectedSponsor,
+        selectedSponsorCompany: null, // Can't get company name from memory store easily
+        agentAssigned: false, // No automatic agent assignment in memory store
+        agentName: null,
+        dealStatus: null,
+      }));
+
+      res.json({
+        success: true,
+        packages: packageInfo,
       });
     }
   } catch (error) {
