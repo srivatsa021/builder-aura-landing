@@ -503,9 +503,11 @@ export default function SponsorDashboard() {
                                   <div className="ml-4">
                                     <Button
                                       onClick={() =>
-                                        handleExpressInterest(pkg._id)
+                                        handleToggleInterest(
+                                          pkg._id,
+                                          pkg.hasExpressedInterest || false,
+                                        )
                                       }
-                                      disabled={pkg.hasExpressedInterest}
                                       variant={
                                         pkg.hasExpressedInterest
                                           ? "secondary"
@@ -517,7 +519,7 @@ export default function SponsorDashboard() {
                                         className={`h-4 w-4 mr-2 ${pkg.hasExpressedInterest ? "fill-current" : ""}`}
                                       />
                                       {pkg.hasExpressedInterest
-                                        ? "Interested ✓"
+                                        ? "Remove Interest"
                                         : "Express Interest"}
                                     </Button>
                                   </div>
