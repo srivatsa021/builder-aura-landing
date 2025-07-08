@@ -603,12 +603,14 @@ export const handleGetPendingDeals: RequestHandler = async (
       console.log("💾 Using memory store for getting pending deals");
 
       // Get pending deals from memory store
-      const allDeals = Array.from(dealMemoryStore.deals.values());
+      const allDeals = await dealMemoryStore.getAllDeals();
+      console.log("💾 All deals in memory store:", allDeals);
       const pendingDeals = allDeals.filter(
         (deal) =>
           deal.status === "pending" ||
           (deal.status === "negotiating" && !deal.agentId),
       );
+      console.log("💾 Pending deals:", pendingDeals);
 
       // Enrich with user and event data
       const enrichedDeals = [];
