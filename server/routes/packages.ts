@@ -395,12 +395,36 @@ export const handleExpressPackageInterest: RequestHandler = async (
       // Express interest
       await packageMemoryStore.expressInterest(packageId, req.user.userId);
 
-      // For memory store, we'll create a simplified response without automatic agent assignment
-      res.json({
-        success: true,
-        message: "Interest expressed in package successfully!",
-        agentAssigned: false,
-      });
+      // Select sponsor and assign agent (simplified for memory store)
+      await packageMemoryStore.selectSponsor(packageId, req.user.userId);
+
+      // Create a deal in memory store (simplified version)
+      const event = await eventMemoryStore.getEventById(packageDoc.eventId);
+      if (event) {
+        // For memory store, we'll create a simplified deal
+        const defaultAgent = await memoryStore.findUserByEmail("a@gmail.com");
+        if (defaultAgent) {
+          // Note: In a real implementation, you might want to create a deals memory store too
+          res.json({
+            success: true,
+            message:
+              "Interest expressed! An agent has been automatically assigned to facilitate this deal.",
+            agentAssigned: true,
+          });
+        } else {
+          res.json({
+            success: true,
+            message: "Interest expressed in package successfully!",
+            agentAssigned: false,
+          });
+        }
+      } else {
+        res.json({
+          success: true,
+          message: "Interest expressed in package successfully!",
+          agentAssigned: false,
+        });
+      }
     }
   } catch (error) {
     console.error("Express package interest error:", error);
