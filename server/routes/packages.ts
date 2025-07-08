@@ -354,6 +354,22 @@ export const handleExpressPackageInterest: RequestHandler = async (
 
         await packageDoc.save();
 
+        // Also remove/cancel the associated deal if it exists
+        try {
+          const deal = await Deal.findOne({
+            packageId: packageId,
+            sponsor: req.user.userId,
+            status: { $nin: ["completed", "cancelled"] },
+          });
+
+          if (deal) {
+            deal.status = "cancelled";
+            await deal.save();
+          }
+        } catch (dealError) {
+          console.error("Error updating deal status:", dealError);
+        }
+
         return res.json({
           success: true,
           message: "Interest removed successfully",
