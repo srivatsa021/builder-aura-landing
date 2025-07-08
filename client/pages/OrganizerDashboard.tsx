@@ -1019,7 +1019,8 @@ export default function OrganizerDashboard() {
                             </span>
                           </div>
                           <p className="text-xs text-blue-600 mt-1">
-                            Waiting for sponsor to proceed with selection
+                            Sponsors have shown interest - automatic agent
+                            assignment will occur when sponsor confirms
                           </p>
                         </div>
                       )}
