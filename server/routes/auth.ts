@@ -9,9 +9,13 @@ import mongoose from "mongoose";
 
 export const handleLogin: RequestHandler = async (req, res) => {
   try {
-    console.log("🔐 Login handler called");
-    console.log("🔐 Request body:", req.body);
-    console.log("🔐 Request headers:", req.headers);
+    // Ensure we only read the body once
+    if (!req.body) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body is missing",
+      });
+    }
 
     const { email, password, role } = req.body as LoginRequest;
 
