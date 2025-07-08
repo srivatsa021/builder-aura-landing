@@ -169,7 +169,7 @@ export default function AgentDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        setDeals((prev) =>
+        setMyDeals((prev) =>
           prev.map((deal) =>
             deal._id === dealId ? { ...deal, status: newStatus } : deal,
           ),
