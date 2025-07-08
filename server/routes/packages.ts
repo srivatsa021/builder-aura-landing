@@ -423,8 +423,48 @@ export const handleExpressPackageInterest: RequestHandler = async (
         });
       }
 
+      const hasInterest = packageDoc.interestedSponsors.includes(
+        req.user.userId,
+      );
+
+      if (isRemovingInterest) {
+        // Remove interest
+        if (!hasInterest) {
+          return res.status(400).json({
+            success: false,
+            message: "You haven't expressed interest in this package",
+          });
+        }
+
+        await packageMemoryStore.removeInterest(packageId, req.user.userId);
+
+        // Cancel associated deal if it exists
+        try {
+          const { dealMemoryStore } = await import("./deals");
+          const deals = await dealMemoryStore.getAllDeals();
+          const deal = deals.find(
+            (d) =>
+              d.eventId === packageDoc.eventId &&
+              d.sponsorId === req.user.userId &&
+              !["completed", "cancelled"].includes(d.status),
+          );
+
+          if (deal) {
+            await dealMemoryStore.updateDealStatus(deal._id, "cancelled");
+          }
+        } catch (dealError) {
+          console.error("Error updating deal status:", dealError);
+        }
+
+        return res.json({
+          success: true,
+          message: "Interest removed successfully",
+          agentAssigned: false,
+        });
+      }
+
       // Check if already interested
-      if (packageDoc.interestedSponsors.includes(req.user.userId)) {
+      if (hasInterest) {
         return res.status(400).json({
           success: false,
           message: "Already expressed interest in this package",
