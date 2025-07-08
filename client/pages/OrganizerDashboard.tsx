@@ -996,9 +996,25 @@ export default function OrganizerDashboard() {
                             </span>
                           </div>
                           {pkg.dealStatus && (
-                            <p className="text-xs text-green-600 mt-1">
-                              Deal Status: {pkg.dealStatus}
-                            </p>
+                            <div className="mt-2">
+                              <Badge
+                                className={`${
+                                  pkg.dealStatus === "negotiating"
+                                    ? "bg-yellow-500 text-white"
+                                    : pkg.dealStatus === "approved"
+                                      ? "bg-blue-500 text-white"
+                                      : pkg.dealStatus === "signed"
+                                        ? "bg-purple-500 text-white"
+                                        : pkg.dealStatus === "completed"
+                                          ? "bg-green-600 text-white"
+                                          : "bg-gray-500 text-white"
+                                }`}
+                              >
+                                Deal Status:{" "}
+                                {pkg.dealStatus.charAt(0).toUpperCase() +
+                                  pkg.dealStatus.slice(1)}
+                              </Badge>
+                            </div>
                           )}
                           {pkg.selectedSponsorCompany && (
                             <p className="text-xs text-green-600 mt-1">
