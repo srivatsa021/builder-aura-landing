@@ -275,11 +275,13 @@ export const handleExpressPackageInterest: RequestHandler = async (
     }
 
     const { packageId } = req.params;
-    const isRemovingInterest = req.method === 'DELETE';
+    const isRemovingInterest = req.method === "DELETE";
     const isMongoConnected = mongoose.connection.readyState === 1;
 
     if (isMongoConnected) {
-      console.log(`📦 Using MongoDB for ${isRemovingInterest ? 'removing' : 'expressing'} package interest`);
+      console.log(
+        `📦 Using MongoDB for ${isRemovingInterest ? "removing" : "expressing"} package interest`,
+      );
 
       const packageDoc = await Package.findById(packageId).populate("eventId");
       if (!packageDoc) {
@@ -289,7 +291,9 @@ export const handleExpressPackageInterest: RequestHandler = async (
         });
       }
 
-      const hasInterest = packageDoc.interestedSponsors.includes(req.user.userId as any);
+      const hasInterest = packageDoc.interestedSponsors.includes(
+        req.user.userId as any,
+      );
 
       if (isRemovingInterest) {
         // Remove interest
@@ -302,7 +306,7 @@ export const handleExpressPackageInterest: RequestHandler = async (
 
         // Remove sponsor from interested list
         packageDoc.interestedSponsors = packageDoc.interestedSponsors.filter(
-          (id: any) => id.toString() !== req.user.userId
+          (id: any) => id.toString() !== req.user.userId,
         );
 
         // Reset package status if this was the selected sponsor
@@ -327,47 +331,48 @@ export const handleExpressPackageInterest: RequestHandler = async (
           });
         }
 
-      // Add sponsor to interested list
-      packageDoc.interestedSponsors.push(req.user.userId as any);
+        // Add sponsor to interested list
+        packageDoc.interestedSponsors.push(req.user.userId as any);
 
-      // Get available agent (for now, use the default agent)
-      const availableAgent = await User.findOne({
-        role: "agent",
-        isActive: true,
-      });
-      if (!availableAgent) {
-        return res.status(503).json({
-          success: false,
-          message: "No agents available at the moment",
+        // Get available agent (for now, use the default agent)
+        const availableAgent = await User.findOne({
+          role: "agent",
+          isActive: true,
+        });
+        if (!availableAgent) {
+          return res.status(503).json({
+            success: false,
+            message: "No agents available at the moment",
+          });
+        }
+
+        // Create deal immediately with assigned agent
+        const newDeal = new Deal({
+          event: packageDoc.eventId,
+          packageId: packageDoc._id,
+          sponsor: req.user.userId,
+          organizer: (packageDoc.eventId as any).organizer,
+          agent: availableAgent._id,
+          amount: packageDoc.amount,
+          description: `Package ${packageDoc.packageNumber}: ${packageDoc.deliverables}`,
+          status: "negotiating",
+        });
+
+        await newDeal.save();
+
+        // Update package status to selected and assign agent
+        packageDoc.selectedSponsor = req.user.userId as any;
+        packageDoc.status = "selected";
+        await packageDoc.save();
+
+        res.json({
+          success: true,
+          message:
+            "Interest expressed! An agent has been automatically assigned to facilitate this deal.",
+          dealId: newDeal._id,
+          agentAssigned: true,
         });
       }
-
-      // Create deal immediately with assigned agent
-      const newDeal = new Deal({
-        event: packageDoc.eventId,
-        packageId: packageDoc._id,
-        sponsor: req.user.userId,
-        organizer: (packageDoc.eventId as any).organizer,
-        agent: availableAgent._id,
-        amount: packageDoc.amount,
-        description: `Package ${packageDoc.packageNumber}: ${packageDoc.deliverables}`,
-        status: "negotiating",
-      });
-
-      await newDeal.save();
-
-      // Update package status to selected and assign agent
-      packageDoc.selectedSponsor = req.user.userId as any;
-      packageDoc.status = "selected";
-      await packageDoc.save();
-
-      res.json({
-        success: true,
-        message:
-          "Interest expressed! An agent has been automatically assigned to facilitate this deal.",
-        dealId: newDeal._id,
-        agentAssigned: true,
-      });
     } else {
       console.log("💾 Using memory store for expressing package interest");
 
