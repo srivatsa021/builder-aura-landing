@@ -703,10 +703,32 @@ export const handleAssignAgentToDeal: RequestHandler = async (
           "Successfully assigned to deal. You can now begin negotiations.",
       });
     } else {
-      console.log("💾 Database not available");
-      return res.status(503).json({
-        success: false,
-        message: "Database not available",
+      console.log("💾 Using memory store for agent assignment");
+
+      const deal = await dealMemoryStore.getDealById(dealId);
+      if (!deal) {
+        return res.status(404).json({
+          success: false,
+          message: "Deal not found",
+        });
+      }
+
+      if (deal.agentId) {
+        return res.status(400).json({
+          success: false,
+          message: "Deal already has an assigned agent",
+        });
+      }
+
+      // Update deal in memory store
+      deal.agentId = req.user.userId;
+      deal.status = "negotiating";
+      deal.updatedAt = new Date().toISOString();
+
+      res.json({
+        success: true,
+        message:
+          "Successfully assigned to deal. You can now begin negotiations.",
       });
     }
   } catch (error) {
