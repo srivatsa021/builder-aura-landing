@@ -144,13 +144,25 @@ export default function SponsorDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        alert("Interest expressed in package! The organizer will be notified.");
+        if (result.agentAssigned) {
+          alert(
+            "Interest expressed! An agent has been automatically assigned to facilitate this deal.",
+          );
+        } else {
+          alert(
+            "Interest expressed in package! The organizer will be notified.",
+          );
+        }
 
         // Update package interest in the selected event
         if (selectedEvent) {
           const updatedPackages = selectedEvent.packages?.map((pkg) =>
             pkg._id === packageId
-              ? { ...pkg, hasExpressedInterest: true }
+              ? {
+                  ...pkg,
+                  hasExpressedInterest: true,
+                  agentAssigned: result.agentAssigned,
+                }
               : pkg,
           );
           setSelectedEvent({ ...selectedEvent, packages: updatedPackages });
