@@ -134,6 +134,7 @@ export default function SponsorDashboard() {
       const result = await response.json();
       if (result.success) {
         setSelectedEvent({ ...event, packages: result.packages });
+        setLastUpdated(new Date().toLocaleTimeString());
       } else {
         setSelectedEvent({ ...event, packages: [] });
       }
