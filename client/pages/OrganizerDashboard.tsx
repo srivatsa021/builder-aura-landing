@@ -461,7 +461,7 @@ export default function OrganizerDashboard() {
     }
   };
 
-  const handleViewInterestedSponsors = async (event: Event) => {
+  const handleViewPackageStatus = async (event: Event) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -475,14 +475,14 @@ export default function OrganizerDashboard() {
 
       const result = await response.json();
       if (result.success) {
-        setInterestedSponsors(result.sponsors);
+        setInterestedSponsors(result.packages);
         setSelectedEventForSponsors(event);
         setIsInterestedSponsorsOpen(true);
       } else {
-        alert(result.message || "Failed to load interested sponsors");
+        alert(result.message || "Failed to load package status");
       }
     } catch (error) {
-      console.error("Error loading interested sponsors:", error);
+      console.error("Error loading package status:", error);
       alert("Network error. Please try again.");
     }
   };
