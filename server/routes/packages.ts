@@ -261,7 +261,7 @@ export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
   }
 };
 
-// Express interest in a package
+// Express or remove interest in a package
 export const handleExpressPackageInterest: RequestHandler = async (
   req: AuthenticatedRequest,
   res,
