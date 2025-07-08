@@ -98,6 +98,7 @@ export default function AgentDashboard() {
 
       const result = await response.json();
       if (result.success) {
+        console.log("📋 Loaded pending deals:", result.deals);
         setPendingDeals(result.deals);
       } else {
         console.error("Failed to load pending deals:", result.message);
