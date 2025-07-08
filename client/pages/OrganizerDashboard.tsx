@@ -447,44 +447,6 @@ export default function OrganizerDashboard() {
     }
   };
 
-  const handleRespondToSponsor = async (
-    sponsorId: string,
-    action: "accept" | "decline",
-  ) => {
-    if (!selectedEventForSponsors) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `/api/events/${selectedEventForSponsors._id}/sponsors/${sponsorId}/respond`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ action }),
-        },
-      );
-
-      const result = await response.json();
-      if (result.success) {
-        alert(result.message);
-        if (action === "accept") {
-          // Remove sponsor from the list as they've been accepted
-          setInterestedSponsors((prev) =>
-            prev.filter((s) => s._id !== sponsorId),
-          );
-        }
-      } else {
-        alert(result.message || "Failed to respond to sponsor");
-      }
-    } catch (error) {
-      console.error("Error responding to sponsor:", error);
-      alert("Network error. Please try again.");
-    }
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
