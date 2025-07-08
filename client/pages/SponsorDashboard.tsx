@@ -484,6 +484,14 @@ export default function SponsorDashboard() {
                                           {pkg.deliverables}
                                         </p>
                                       </div>
+                                      {pkg.agentAssigned && (
+                                        <div className="mt-2">
+                                          <Badge className="bg-green-500 text-white">
+                                            <Users className="h-3 w-3 mr-1" />
+                                            Agent Assigned
+                                          </Badge>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                   <div className="ml-4">
