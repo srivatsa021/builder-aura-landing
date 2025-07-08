@@ -119,6 +119,7 @@ export default function AgentDashboard() {
 
       const result = await response.json();
       if (result.success) {
+        console.log("📋 Loaded my deals:", result.deals);
         setMyDeals(result.deals);
       } else {
         console.error("Failed to load my deals:", result.message);
