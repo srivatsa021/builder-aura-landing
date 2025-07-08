@@ -479,9 +479,16 @@ export default function SponsorDashboard() {
                   {selectedEvent.packages &&
                     selectedEvent.packages.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold mb-3">
-                          Sponsorship Packages
-                        </h3>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-lg font-semibold">
+                            Sponsorship Packages
+                          </h3>
+                          {lastUpdated && (
+                            <span className="text-xs text-muted-foreground">
+                              Updated: {lastUpdated}
+                            </span>
+                          )}
+                        </div>
                         <div className="grid gap-4">
                           {selectedEvent.packages.map((pkg) => (
                             <Card
