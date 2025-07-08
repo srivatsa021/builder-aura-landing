@@ -275,10 +275,11 @@ export const handleExpressPackageInterest: RequestHandler = async (
     }
 
     const { packageId } = req.params;
+    const isRemovingInterest = req.method === 'DELETE';
     const isMongoConnected = mongoose.connection.readyState === 1;
 
     if (isMongoConnected) {
-      console.log("📦 Using MongoDB for expressing package interest");
+      console.log(`📦 Using MongoDB for ${isRemovingInterest ? 'removing' : 'expressing'} package interest`);
 
       const packageDoc = await Package.findById(packageId).populate("eventId");
       if (!packageDoc) {
@@ -288,13 +289,43 @@ export const handleExpressPackageInterest: RequestHandler = async (
         });
       }
 
-      // Check if already interested
-      if (packageDoc.interestedSponsors.includes(req.user.userId as any)) {
-        return res.status(400).json({
-          success: false,
-          message: "Already expressed interest in this package",
+      const hasInterest = packageDoc.interestedSponsors.includes(req.user.userId as any);
+
+      if (isRemovingInterest) {
+        // Remove interest
+        if (!hasInterest) {
+          return res.status(400).json({
+            success: false,
+            message: "You haven't expressed interest in this package",
+          });
+        }
+
+        // Remove sponsor from interested list
+        packageDoc.interestedSponsors = packageDoc.interestedSponsors.filter(
+          (id: any) => id.toString() !== req.user.userId
+        );
+
+        // Reset package status if this was the selected sponsor
+        if (packageDoc.selectedSponsor?.toString() === req.user.userId) {
+          packageDoc.selectedSponsor = undefined;
+          packageDoc.status = "available";
+        }
+
+        await packageDoc.save();
+
+        return res.json({
+          success: true,
+          message: "Interest removed successfully",
+          agentAssigned: false,
         });
-      }
+      } else {
+        // Express interest
+        if (hasInterest) {
+          return res.status(400).json({
+            success: false,
+            message: "Already expressed interest in this package",
+          });
+        }
 
       // Add sponsor to interested list
       packageDoc.interestedSponsors.push(req.user.userId as any);
