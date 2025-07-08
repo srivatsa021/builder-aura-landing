@@ -4,6 +4,7 @@ import { eventMemoryStore } from "./events";
 import { memoryStore } from "../database/memory-store";
 import { Package } from "../database/models/Package";
 import { Event } from "../database/models/Event";
+import { packageMemoryStore } from "./packages";
 import mongoose from "mongoose";
 
 // In-memory storage for deals and chats
