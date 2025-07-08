@@ -7,6 +7,80 @@ import { Deal } from "../database/models/Deal";
 import mongoose from "mongoose";
 import { memoryStore } from "../database/memory-store";
 
+// Memory store for packages when MongoDB is not available
+interface PackageData {
+  _id: string;
+  eventId: string;
+  packageNumber: number;
+  amount: number;
+  deliverables: string;
+  interestedSponsors: string[];
+  selectedSponsor?: string;
+  status: "available" | "selected" | "completed";
+  createdAt: string;
+  updatedAt: string;
+}
+
+class PackageMemoryStore {
+  private packages: Map<string, PackageData> = new Map();
+  private packageCounter = 1;
+
+  generateId(): string {
+    return `package_${this.packageCounter++}`;
+  }
+
+  async createPackage(
+    packageData: Omit<PackageData, "_id" | "createdAt" | "updatedAt">,
+  ): Promise<PackageData> {
+    const pkg: PackageData = {
+      ...packageData,
+      _id: this.generateId(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.packages.set(pkg._id, pkg);
+    console.log(`💾 [PackageMemoryStore] Created package: ${pkg._id}`);
+    return pkg;
+  }
+
+  async getPackagesByEvent(eventId: string): Promise<PackageData[]> {
+    return Array.from(this.packages.values()).filter(
+      (p) => p.eventId === eventId,
+    );
+  }
+
+  async getPackageById(id: string): Promise<PackageData | null> {
+    return this.packages.get(id) || null;
+  }
+
+  async expressInterest(
+    packageId: string,
+    sponsorId: string,
+  ): Promise<boolean> {
+    const pkg = this.packages.get(packageId);
+    if (pkg && !pkg.interestedSponsors.includes(sponsorId)) {
+      pkg.interestedSponsors.push(sponsorId);
+      pkg.updatedAt = new Date().toISOString();
+      return true;
+    }
+    return false;
+  }
+
+  async selectSponsor(packageId: string, sponsorId: string): Promise<boolean> {
+    const pkg = this.packages.get(packageId);
+    if (pkg) {
+      pkg.selectedSponsor = sponsorId;
+      pkg.status = "selected";
+      pkg.updatedAt = new Date().toISOString();
+      return true;
+    }
+    return false;
+  }
+}
+
+export const packageMemoryStore = new PackageMemoryStore();
+
 // Create packages for an event
 export const handleCreatePackages: RequestHandler = async (
   req: AuthenticatedRequest,
