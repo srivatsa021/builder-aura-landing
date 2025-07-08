@@ -66,7 +66,16 @@ export default function SponsorDashboard() {
 
     // Load real events from API
     loadEvents();
-  }, []);
+
+    // Set up auto-refresh for real-time status updates
+    const refreshInterval = setInterval(() => {
+      if (selectedEvent && isModalOpen) {
+        handleViewDetails(selectedEvent);
+      }
+    }, 10000); // Refresh every 10 seconds when modal is open
+
+    return () => clearInterval(refreshInterval);
+  }, [selectedEvent, isModalOpen]);
 
   const loadEvents = async () => {
     try {
