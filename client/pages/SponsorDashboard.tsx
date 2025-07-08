@@ -28,6 +28,8 @@ interface Package {
   status: string;
   hasExpressedInterest?: boolean;
   agentAssigned?: boolean;
+  dealStatus?: string;
+  agentName?: string;
 }
 
 interface Event {
