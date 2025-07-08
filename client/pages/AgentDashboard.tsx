@@ -293,7 +293,7 @@ export default function AgentDashboard() {
                   <p className="text-sm text-muted-foreground">Active Deals</p>
                   <p className="text-2xl font-bold">
                     {
-                      deals.filter((d) =>
+                      myDeals.filter((d) =>
                         ["pending", "negotiating"].includes(d.status),
                       ).length
                     }
