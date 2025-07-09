@@ -170,4 +170,5 @@ DealSchema.index({ organizer: 1 });
 DealSchema.index({ agent: 1 });
 DealSchema.index({ status: 1 });
 
-export const Deal = mongoose.model<IDeal>("Deal", DealSchema);
+// Prevent model recompilation during hot reload
+export const Deal = mongoose.models.Deal || mongoose.model<IDeal>("Deal", DealSchema);

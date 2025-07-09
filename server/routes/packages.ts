@@ -224,6 +224,7 @@ export const handleCreatePackages: RequestHandler = async (
 export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
   try {
     const { eventId } = req.params;
+    console.log(`🔍 Agent requesting packages for event: ${eventId}`);
     const isMongoConnected = mongoose.connection.readyState === 1;
 
     if (isMongoConnected) {
@@ -235,6 +236,11 @@ export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
           "interestedSponsors",
           "name companyName industry phone website",
         );
+      
+      console.log(`📦 Found ${packages.length} packages for event ${eventId}`);
+      if (packages.length > 0) {
+        console.log(`📦 First package:`, JSON.stringify(packages[0].toObject(), null, 2));
+      }
 
       // If the request has a user (sponsor), mark packages they've expressed interest in and get deal info
       const packagesWithInterestStatus = await Promise.all(
@@ -767,5 +773,38 @@ export const handlePackageInterestResponse: RequestHandler = async (
       success: false,
       message: "Failed to respond to package interest",
     });
+  }
+};
+
+// Get interested sponsors for all packages of an event
+export const handleGetInterestedSponsorsForEvent: RequestHandler = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      const packages = await Package.find({ eventId })
+        .populate("interestedSponsors", "_id name companyName email phone website")
+        .select("packageNumber interestedSponsors");
+      res.json({ success: true, packages });
+    } else {
+      const packages = await packageMemoryStore.getPackagesByEvent(eventId);
+      // Simulate interested sponsor details from memoryStore
+      const packagesWithSponsors = await Promise.all(
+        packages.map(async (pkg) => {
+          const sponsors = await Promise.all(
+            pkg.interestedSponsors.map((id) => memoryStore.findUserById(id))
+          );
+          return {
+            packageNumber: pkg.packageNumber,
+            interestedSponsors: sponsors.filter(Boolean),
+          };
+        })
+      );
+      res.json({ success: true, packages: packagesWithSponsors });
+    }
+  } catch (error) {
+    console.error("Get interested sponsors for event error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch interested sponsors" });
   }
 };

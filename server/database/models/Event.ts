@@ -134,4 +134,5 @@ EventSchema.index({ eventDate: 1 });
 EventSchema.index({ selectedSponsor: 1 });
 EventSchema.index({ assignedAgent: 1 });
 
-export const Event = mongoose.model<IEvent>("Event", EventSchema);
+// Prevent model recompilation during hot reload
+export const Event = mongoose.models.Event || mongoose.model<IEvent>("Event", EventSchema);

@@ -6,6 +6,7 @@ import { Package } from "../database/models/Package";
 import { Event } from "../database/models/Event";
 import { packageMemoryStore } from "./packages";
 import mongoose from "mongoose";
+import { Deal, IDeal } from "../database/models/Deal";
 
 // In-memory storage for deals and chats
 interface Deal {
@@ -205,9 +206,9 @@ export const handleGetInterestedSponsors: RequestHandler = async (
           status: pkg.status,
           interestCount: pkg.interestedSponsors.length,
           hasSelectedSponsor: !!pkg.selectedSponsor,
-          selectedSponsorCompany: pkg.selectedSponsor?.companyName,
+          selectedSponsorCompany: (pkg.selectedSponsor && typeof pkg.selectedSponsor === 'object' && 'companyName' in pkg.selectedSponsor) ? (pkg.selectedSponsor as any).companyName : null,
           agentAssigned: !!deal?.agent,
-          agentName: deal?.agent?.name,
+          agentName: (deal?.agent && typeof deal.agent === 'object' && 'name' in deal.agent) ? (deal.agent as any).name : null,
           dealStatus: deal?.status,
         };
       });
@@ -304,7 +305,7 @@ export const handleRespondToInterest: RequestHandler = async (
     }
 
     // Check if user owns this event
-    if (event.organizer._id !== req.user.userId) {
+    if (event.organizer.toString() !== req.user.userId) {
       return res.status(403).json({
         success: false,
         message: "You can only respond to interest for your own events",
@@ -392,12 +393,21 @@ export const handleGetAgentDeals: RequestHandler = async (
           event: {
             title: event.title,
             eventDate: event.eventDate,
-            organizer: organizer.name,
-            college: organizer.collegeName,
+            organizer: {
+              name: organizer.name,
+              email: organizer.email,
+              phone: organizer.phone,
+              collegeName: organizer.collegeName,
+              clubName: organizer.clubName,
+              // Remove city if not present on User
+            },
           },
           sponsor: {
+            name: sponsor.name,
+            email: sponsor.email,
+            phone: sponsor.phone,
             companyName: sponsor.companyName,
-            contactPerson: sponsor.name,
+            industry: sponsor.industry,
           },
         });
       }
@@ -619,8 +629,8 @@ export const handleGetPendingDeals: RequestHandler = async (
         agent: { $exists: false },
       })
         .populate("event", "title eventDate")
-        .populate("sponsor", "name companyName")
-        .populate("organizer", "name clubName collegeName")
+        .populate("sponsor", "name email phone companyName industry")
+        .populate("organizer", "name email phone clubName collegeName")
         .populate("packageId", "packageNumber amount deliverables")
         .sort({ createdAt: 1 });
 
@@ -659,11 +669,16 @@ export const handleGetPendingDeals: RequestHandler = async (
             sponsor: {
               _id: sponsor._id,
               name: sponsor.name,
+              email: sponsor.email,
+              phone: sponsor.phone,
               companyName: sponsor.companyName,
+              industry: sponsor.industry,
             },
             organizer: {
               _id: organizer._id,
               name: organizer.name,
+              email: organizer.email,
+              phone: organizer.phone,
               clubName: organizer.clubName,
               collegeName: organizer.collegeName,
             },
@@ -729,13 +744,14 @@ export const handleAssignAgentToDeal: RequestHandler = async (
       }
 
       deal.agent = req.user.userId as any;
-      deal.status = "negotiating";
+      deal.status = "negotiating"; // Set status to 'negotiating' for clarity
       await deal.save();
 
       res.json({
         success: true,
         message:
           "Successfully assigned to deal. You can now begin negotiations.",
+        status: deal.status,
       });
     } else {
       console.log("💾 Using memory store for agent assignment");
@@ -757,13 +773,14 @@ export const handleAssignAgentToDeal: RequestHandler = async (
 
       // Update deal in memory store
       deal.agentId = req.user.userId;
-      deal.status = "negotiating";
+      deal.status = "negotiating"; // Set status to 'negotiating' for clarity
       deal.updatedAt = new Date().toISOString();
 
       res.json({
         success: true,
         message:
           "Successfully assigned to deal. You can now begin negotiations.",
+        status: deal.status,
       });
     }
   } catch (error) {
@@ -795,8 +812,8 @@ export const handleGetMyDeals: RequestHandler = async (
 
       const myDeals = await Deal.find({ agent: req.user.userId })
         .populate("event", "title eventDate")
-        .populate("sponsor", "name companyName")
-        .populate("organizer", "name clubName collegeName")
+        .populate("sponsor", "name email phone companyName industry")
+        .populate("organizer", "name email phone clubName collegeName")
         .populate("packageId", "packageNumber amount deliverables")
         .sort({ createdAt: -1 });
 
@@ -828,11 +845,16 @@ export const handleGetMyDeals: RequestHandler = async (
             sponsor: {
               _id: sponsor._id,
               name: sponsor.name,
+              email: sponsor.email,
+              phone: sponsor.phone,
               companyName: sponsor.companyName,
+              industry: sponsor.industry,
             },
             organizer: {
               _id: organizer._id,
               name: organizer.name,
+              email: organizer.email,
+              phone: organizer.phone,
               clubName: organizer.clubName,
               collegeName: organizer.collegeName,
             },
@@ -859,6 +881,52 @@ export const handleGetMyDeals: RequestHandler = async (
     res.status(500).json({
       success: false,
       message: "Failed to get deals",
+    });
+  }
+};
+
+// Temporary endpoint to refresh deal data with full user details
+export const handleRefreshDealData: RequestHandler = async (
+  req: AuthenticatedRequest,
+  res,
+) => {
+  try {
+    if (!req.user || req.user.role !== "agent") {
+      return res.status(403).json({
+        success: false,
+        message: "Only agents can refresh deal data",
+      });
+    }
+
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for refreshing deal data");
+
+      // Get all deals for the agent with full user details
+      const myDeals = await Deal.find({ agent: req.user.userId })
+        .populate("event", "title eventDate")
+        .populate("sponsor", "name email phone companyName industry")
+        .populate("organizer", "name email phone clubName collegeName")
+        .populate("packageId", "packageNumber amount deliverables")
+        .sort({ createdAt: -1 });
+
+      res.json({
+        success: true,
+        deals: myDeals,
+        message: "Deal data refreshed with full user details",
+      });
+    } else {
+      res.json({
+        success: false,
+        message: "Memory store not supported for this operation",
+      });
+    }
+  } catch (error) {
+    console.error("Refresh deal data error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to refresh deal data",
     });
   }
 };

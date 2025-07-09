@@ -355,3 +355,51 @@ export const handleGetProfile: RequestHandler = async (
     res.status(500).json(response);
   }
 };
+
+// Get user details by ID
+export const handleGetUserById: RequestHandler = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const isMongoConnected = mongoose.connection.readyState === 1;
+
+    if (isMongoConnected) {
+      console.log("📦 Using MongoDB for getting user details");
+
+      const user = await User.findById(userId).select("name email phone collegeName clubName companyName industry");
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        user: user,
+      });
+    } else {
+      console.log("💾 Using memory store for getting user details");
+
+      const user = await memoryStore.findUserById(userId);
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        user: user,
+      });
+    }
+  } catch (error) {
+    console.error("Get user details error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch user details",
+    });
+  }
+};

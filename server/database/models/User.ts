@@ -142,4 +142,5 @@ UserSchema.methods.toJSON = function () {
   return userObject;
 };
 
-export const User = mongoose.model<IUser>("User", UserSchema);
+// Prevent model recompilation during hot reload
+export const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

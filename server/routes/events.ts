@@ -13,6 +13,8 @@ interface EventData {
   organizer: {
     _id: string;
     name: string;
+    email: string;
+    phone: string;
     clubName: string;
     collegeName: string;
   };
@@ -86,13 +88,54 @@ export const handleGetEvents: RequestHandler = async (req, res) => {
     if (isMongoConnected) {
       console.log("📦 Using MongoDB for getting events");
 
-      const events = await Event.find({ status: { $ne: "draft" } })
-        .populate("organizer", "name clubName collegeName")
+      const events = await Event.find()
+        .populate({
+          path: "organizer",
+          select: "name email phone collegeName clubName"
+        })
         .sort({ createdAt: -1 });
+
+      // Ensure all events have complete organizer details
+      const enrichedEvents = await Promise.all(events.map(async (event) => {
+        const eventObj = event.toObject();
+        
+        // If organizer details are missing, fetch from User model
+        if (!eventObj.organizer?.email || !eventObj.organizer?.phone || !eventObj.organizer?.name) {
+          console.log(`⚠️ Event ${eventObj._id} missing organizer details, fetching from User model...`);
+          
+          try {
+            const organizer = await User.findById(eventObj.organizer?._id || eventObj.organizer);
+            if (organizer) {
+              eventObj.organizer = {
+                _id: organizer._id,
+                name: organizer.name || 'N/A',
+                email: organizer.email || 'N/A',
+                phone: organizer.phone || 'N/A',
+                clubName: organizer.clubName || 'N/A',
+                collegeName: organizer.collegeName || 'N/A'
+              };
+              console.log(`✅ Enriched organizer details for event ${eventObj._id}:`, {
+                name: eventObj.organizer.name,
+                email: eventObj.organizer.email,
+                phone: eventObj.organizer.phone
+              });
+            }
+          } catch (error) {
+            console.error(`❌ Error fetching organizer details for event ${eventObj._id}:`, error);
+          }
+        }
+        
+        return eventObj;
+      }));
+
+      console.log(`[DEBUG] /api/events returning ${enrichedEvents.length} events`);
+      if (enrichedEvents.length > 0) {
+        console.log('[DEBUG] First event:', JSON.stringify(enrichedEvents[0], null, 2));
+      }
 
       res.json({
         success: true,
-        events: events,
+        events: enrichedEvents
       });
     } else {
       console.log("💾 Using memory store for getting events");
@@ -239,7 +282,7 @@ export const handleCreateEvent: RequestHandler = async (
 
       const populatedEvent = await Event.findById(newEvent._id).populate(
         "organizer",
-        "name clubName collegeName",
+        "name email phone clubName collegeName",
       );
 
       res.status(201).json({
@@ -265,6 +308,8 @@ export const handleCreateEvent: RequestHandler = async (
         organizer: {
           _id: req.user.userId,
           name: organizer.name,
+          email: organizer.email || "",
+          phone: organizer.phone || "",
           clubName: organizer.clubName || "",
           collegeName: organizer.collegeName || "",
         },

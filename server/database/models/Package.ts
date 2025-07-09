@@ -60,4 +60,5 @@ const PackageSchema = new Schema<IPackage>(
 PackageSchema.index({ eventId: 1 });
 PackageSchema.index({ selectedSponsor: 1 });
 
-export const Package = mongoose.model<IPackage>("Package", PackageSchema);
+// Prevent model recompilation during hot reload
+export const Package = mongoose.models.Package || mongoose.model<IPackage>("Package", PackageSchema);

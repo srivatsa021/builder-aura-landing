@@ -63,4 +63,5 @@ InterestSchema.index({ organizerId: 1 });
 InterestSchema.index({ status: 1 });
 InterestSchema.index({ assignedAgent: 1 });
 
-export const Interest = mongoose.model<IInterest>("Interest", InterestSchema);
+// Prevent model recompilation during hot reload
+export const Interest = mongoose.models.Interest || mongoose.model<IInterest>("Interest", InterestSchema);

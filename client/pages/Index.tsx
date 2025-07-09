@@ -102,26 +102,6 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary mb-2">500+</div>
-              <div className="text-muted-foreground">Active Events</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary mb-2">200+</div>
-              <div className="text-muted-foreground">Partner Companies</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary mb-2">₹50L+</div>
-              <div className="text-muted-foreground">Deals Facilitated</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
@@ -172,83 +152,6 @@ export default function Index() {
                 </p>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Events */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">Featured Events</h2>
-              <p className="text-muted-foreground">
-                Discover upcoming events seeking sponsorship
-              </p>
-            </div>
-            <Button variant="outline">View All Events</Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                title: "TechFest 2024",
-                organizer: "IIT Mumbai CSE Club",
-                amount: "₹5,00,000",
-                attendees: "2000+",
-                date: "March 15-17, 2024",
-              },
-              {
-                title: "Cultural Carnival",
-                organizer: "Delhi University Arts Society",
-                amount: "₹3,00,000",
-                attendees: "1500+",
-                date: "February 20-22, 2024",
-              },
-              {
-                title: "Innovation Summit",
-                organizer: "NIT Trichy Entrepreneurship Cell",
-                amount: "₹4,00,000",
-                attendees: "1000+",
-                date: "April 10-12, 2024",
-              },
-            ].map((event, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">
-                        {event.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {event.organizer}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center text-green-600">
-                        <DollarSign className="h-4 w-4 mr-1" />
-                        {event.amount}
-                      </div>
-                      <div className="flex items-center text-muted-foreground">
-                        <Users className="h-4 w-4 mr-1" />
-                        {event.attendees}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      {event.date}
-                    </div>
-
-                    <Button className="w-full">
-                      View Details
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         </div>
       </section>

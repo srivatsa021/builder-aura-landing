@@ -566,26 +566,6 @@ export default function OrganizerDashboard() {
                   </div>
                 </CardContent>
               </Card>
-
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium">Sponsor Connection</h3>
-                </div>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <Building2 className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Connect with sponsors to fund your events
-                    </p>
-                    <Link to="/sponsors">
-                      <Button className="w-full">
-                        <Building2 className="h-4 w-4 mr-2" />
-                        View Sponsors
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </div>
             </div>
           </div>
         </aside>
@@ -1011,25 +991,22 @@ export default function OrganizerDashboard() {
                                   pkg.dealStatus === "negotiating"
                                     ? "bg-yellow-500 text-white"
                                     : pkg.dealStatus === "approved"
-                                      ? "bg-blue-500 text-white"
-                                      : pkg.dealStatus === "signed"
-                                        ? "bg-purple-500 text-white"
-                                        : pkg.dealStatus === "completed"
-                                          ? "bg-green-600 text-white"
-                                          : "bg-gray-500 text-white"
+                                    ? "bg-blue-500 text-white"
+                                    : pkg.dealStatus === "signed"
+                                    ? "bg-purple-500 text-white"
+                                    : pkg.dealStatus === "completed"
+                                    ? "bg-green-600 text-white"
+                                    : "bg-gray-500 text-white"
                                 }`}
                               >
                                 Deal Status:{" "}
-                                {pkg.dealStatus.charAt(0).toUpperCase() +
-                                  pkg.dealStatus.slice(1)}
+                                {pkg.dealStatus === "negotiating" ? "Agent Assigned" : pkg.dealStatus.charAt(0).toUpperCase() + pkg.dealStatus.slice(1)}
                               </Badge>
                             </div>
                           )}
-                          {pkg.selectedSponsorCompany && (
-                            <p className="text-xs text-green-600 mt-1">
-                              Selected Sponsor: {pkg.selectedSponsorCompany}
-                            </p>
-                          )}
+                          <div className="text-muted-foreground text-sm mt-2">
+                            Sponsor details are hidden until a deal is finalized.
+                          </div>
                         </div>
                       )}
 

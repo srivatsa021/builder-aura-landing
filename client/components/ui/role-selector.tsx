@@ -10,9 +10,10 @@ interface RoleSelectorProps {
   value?: UserRole;
   onValueChange?: (value: UserRole) => void;
   className?: string;
+  allowedRoles?: UserRole[]; // New prop
 }
 
-const roles = [
+const allRoles = [
   {
     value: "sponsor" as const,
     label: "Sponsor/Company",
@@ -37,13 +38,16 @@ export function RoleSelector({
   value,
   onValueChange,
   className,
+  allowedRoles,
 }: RoleSelectorProps) {
+  const roles = allowedRoles
+    ? allRoles.filter((role) => allowedRoles.includes(role.value))
+    : allRoles;
   return (
     <div className={cn("grid gap-3", className)}>
       {roles.map((role) => {
         const Icon = role.icon;
         const isSelected = value === role.value;
-
         return (
           <Card
             key={role.value}

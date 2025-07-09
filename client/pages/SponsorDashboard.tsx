@@ -459,10 +459,6 @@ export default function SponsorDashboard() {
                       <CardContent className="p-4">
                         <div className="space-y-2">
                           <p>
-                            <span className="font-medium">Contact Person:</span>{" "}
-                            {selectedEvent.organizer.name}
-                          </p>
-                          <p>
                             <span className="font-medium">Organization:</span>{" "}
                             {selectedEvent.organizer.clubName}
                           </p>
@@ -470,6 +466,9 @@ export default function SponsorDashboard() {
                             <span className="font-medium">Institution:</span>{" "}
                             {selectedEvent.organizer.collegeName}
                           </p>
+                        </div>
+                        <div className="text-muted-foreground text-sm mt-2">
+                          Organizer contact details are hidden until a deal is finalized.
                         </div>
                       </CardContent>
                     </Card>
@@ -523,26 +522,21 @@ export default function SponsorDashboard() {
                                               `: ${pkg.agentName}`}
                                           </Badge>
                                           {pkg.dealStatus && (
-                                            <div className="flex items-center gap-2">
-                                              <Badge
-                                                className={`${
-                                                  pkg.dealStatus === "approved"
-                                                    ? "bg-blue-500 text-white"
-                                                    : pkg.dealStatus ===
-                                                        "signed"
-                                                      ? "bg-purple-500 text-white"
-                                                      : pkg.dealStatus ===
-                                                          "completed"
-                                                        ? "bg-green-600 text-white"
-                                                        : "bg-gray-500 text-white"
-                                                }`}
-                                              >
-                                                Status:{" "}
-                                                {pkg.dealStatus
-                                                  .charAt(0)
-                                                  .toUpperCase() +
-                                                  pkg.dealStatus.slice(1)}
-                                              </Badge>
+                                            <div className="mt-2">
+                                              <span className="font-semibold text-primary">Status:</span>{' '}
+                                              <span className={`inline-block rounded px-2 py-1 ml-2 ${
+                                                pkg.dealStatus === "negotiating"
+                                                  ? "bg-yellow-500 text-white"
+                                                  : pkg.dealStatus === "approved"
+                                                  ? "bg-blue-500 text-white"
+                                                  : pkg.dealStatus === "signed"
+                                                  ? "bg-purple-500 text-white"
+                                                  : pkg.dealStatus === "completed"
+                                                  ? "bg-green-600 text-white"
+                                                  : "bg-gray-500 text-white"
+                                              }`}>
+                                                {pkg.dealStatus === "negotiating" ? "Agent Assigned" : pkg.dealStatus.charAt(0).toUpperCase() + pkg.dealStatus.slice(1)}
+                                              </span>
                                             </div>
                                           )}
                                         </div>

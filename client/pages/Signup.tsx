@@ -89,9 +89,6 @@ export default function Signup() {
           case "organizer":
             window.location.href = "/organizer-dashboard";
             break;
-          case "agent":
-            window.location.href = "/agent-dashboard";
-            break;
           default:
             window.location.href = "/";
         }
@@ -202,16 +199,6 @@ export default function Signup() {
           </>
         );
 
-      case "agent":
-        return (
-          <div className="p-4 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              Agent accounts are created by invitation only. Please contact our
-              team if you're interested in becoming a platform agent.
-            </p>
-          </div>
-        );
-
       default:
         return null;
     }
@@ -258,6 +245,7 @@ export default function Signup() {
                 <RoleSelector
                   value={selectedRole}
                   onValueChange={setSelectedRole}
+                  allowedRoles={["sponsor", "organizer"]}
                 />
               </div>
 
@@ -343,11 +331,8 @@ export default function Signup() {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={selectedRole === "agent"}
                   >
-                    {selectedRole === "agent"
-                      ? "Contact Required"
-                      : "Create Account"}
+                    Create Account
                   </Button>
                 </>
               )}

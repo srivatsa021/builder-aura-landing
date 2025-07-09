@@ -8,6 +8,7 @@ import {
   handleSignup,
   handleLogout,
   handleGetProfile,
+  handleGetUserById,
 } from "./routes/auth";
 import {
   handleGetEvents,
@@ -29,6 +30,7 @@ import {
   handleGetPendingDeals,
   handleAssignAgentToDeal,
   handleGetMyDeals,
+  handleRefreshDealData,
   dealMemoryStore,
 } from "./routes/deals";
 import {
@@ -37,6 +39,7 @@ import {
   handleExpressPackageInterest,
   handleGetAllSponsors,
   handlePackageInterestResponse,
+  handleGetInterestedSponsorsForEvent,
 } from "./routes/packages";
 import { authenticateToken } from "./middleware/auth";
 import { memoryStore } from "./database/memory-store";
@@ -94,6 +97,7 @@ export function createServer() {
 
   // Protected routes (require authentication)
   app.get("/api/auth/profile", authenticateToken, handleGetProfile);
+  app.get("/api/users/:userId", authenticateToken, handleGetUserById);
 
   // Event routes
   app.get("/api/events", handleGetEvents);
@@ -134,6 +138,7 @@ export function createServer() {
     authenticateToken,
     handleUpdateDealStatus,
   );
+  app.get("/api/deals/refresh", authenticateToken, handleRefreshDealData);
 
   // Package routes
   app.post(
@@ -142,6 +147,11 @@ export function createServer() {
     handleCreatePackages,
   );
   app.get("/api/events/:eventId/packages", handleGetEventPackages);
+  app.get(
+    "/api/events/:eventId/packages/interested-sponsors",
+    authenticateToken,
+    handleGetInterestedSponsorsForEvent,
+  );
   app.post(
     "/api/packages/:packageId/interest",
     authenticateToken,
