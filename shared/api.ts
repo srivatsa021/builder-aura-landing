@@ -36,6 +36,7 @@ export interface SignupRequest {
   industry?: string;
   website?: string;
   address?: string;
+  gstNumber?: string;
   // Organizer fields
   clubName?: string;
   collegeName?: string;
@@ -51,6 +52,33 @@ export interface AuthResponse {
     name: string;
     role: UserRole;
   };
+  message?: string;
+}
+
+// Sponsor application types
+export interface SponsorApplication {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  role: "sponsor";
+  companyName: string;
+  industry: string;
+  website?: string;
+  address: string;
+  gstNumber: string;
+  status: "pending" | "approved" | "rejected";
+  submittedAt: string;
+}
+
+export interface SponsorApplicationsResponse {
+  success: boolean;
+  applications?: SponsorApplication[];
+  message?: string;
+}
+
+export interface ActionResponse {
+  success: boolean;
   message?: string;
 }
 
