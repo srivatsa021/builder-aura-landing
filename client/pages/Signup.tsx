@@ -13,6 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { RoleSelector, UserRole } from "@/components/ui/role-selector";
 import { Handshake, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Signup() {
   const [selectedRole, setSelectedRole] = useState<UserRole>();
@@ -34,6 +37,8 @@ export default function Signup() {
     description: "",
     // Agent fields (handled internally)
   });
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -344,13 +349,96 @@ export default function Signup() {
                   {/* Role-specific fields */}
                   {renderRoleSpecificFields()}
 
+                  {/* Terms & Conditions */}
+                  <div className="flex items-start gap-3">
+                    <Checkbox id="acceptTerms" checked={acceptTerms} onCheckedChange={(v) => setAcceptTerms(Boolean(v))} />
+                    <Label htmlFor="acceptTerms" className="text-sm leading-relaxed">
+                      I agree to the
+                      {" "}
+                      <button type="button" className="text-accent underline" onClick={() => setShowTerms(true)}>
+                        Terms & Conditions
+                      </button>
+                    </Label>
+                  </div>
+
                   {/* Submit */}
                   <Button
                     type="submit"
                     className="w-full"
+                    disabled={!acceptTerms}
                   >
                     Create Account
                   </Button>
+
+                  {/* Terms Modal */}
+                  <Dialog open={showTerms} onOpenChange={setShowTerms}>
+                    <DialogContent className="max-w-2xl max-h-[85vh] p-0">
+                      <DialogHeader className="px-6 pt-6">
+                        <DialogTitle>Terms & Conditions</DialogTitle>
+                      </DialogHeader>
+                      <ScrollArea className="px-6 pb-6">
+                        <div className="space-y-4 text-sm text-foreground/90">
+                          <p>
+                            These Terms & Conditions ("Terms") govern the use of the SponsorHub platform by
+                            event organizers ("Organizers"), sponsors ("Sponsors"), and agents ("Agents"). By
+                            creating an account, you acknowledge that you have read, understood, and agree to be
+                            bound by these Terms.
+                          </p>
+                          <ol className="list-decimal pl-5 space-y-3">
+                            <li>
+                              Role of SponsorHub: SponsorHub is a facilitation platform that connects Organizers and
+                              Sponsors. SponsorHub does not guarantee outcomes, performance, or the fulfillment of
+                              any obligations agreed between parties.
+                            </li>
+                            <li>
+                              Deliverables & Performance: All deliverables, timelines, promotional activities, and
+                              financial terms are agreed directly between the Organizer and Sponsor. Each party is
+                              solely responsible for honoring its commitments. SponsorHub is not responsible for any
+                              failure by either party to fulfill obligations.
+                            </li>
+                            <li>
+                              Payments & Finances: Payment schedules, amounts, and refunds (if any) are governed by
+                              the agreement between the Organizer and Sponsor. SponsorHub is not a party to such
+                              agreements unless expressly stated in writing.
+                            </li>
+                            <li>
+                              Disputes & Legal Action: If deliverables or finances are not fulfilled, both parties
+                              retain the right to seek appropriate legal remedies against each other. SponsorHub will
+                              cooperate reasonably with lawful requests but is not liable for losses arising from any
+                              dispute between parties.
+                            </li>
+                            <li>
+                              Accuracy of Information: Users must provide accurate and lawful information (including
+                              GST and business details, where applicable). Misrepresentation may result in suspension
+                              or termination of access.
+                            </li>
+                            <li>
+                              Compliance: Users agree to comply with applicable laws, advertising standards, and
+                              institutional policies related to events and sponsorships.
+                            </li>
+                            <li>
+                              Limitation of Liability: To the maximum extent permitted by law, SponsorHub shall not
+                              be liable for indirect, incidental, special, or consequential damages, or for any loss
+                              of profits or business interruptions arising from use of the platform or third‑party
+                              agreements.
+                            </li>
+                            <li>
+                              Termination: SponsorHub may suspend or terminate access for violations of these Terms
+                              or unlawful activity.
+                            </li>
+                            <li>
+                              Changes: SponsorHub may update these Terms from time to time. Continued use after
+                              changes constitutes acceptance of the updated Terms.
+                            </li>
+                          </ol>
+                          <p>
+                            By continuing, you confirm you understand that SponsorHub facilitates connections but is
+                            not responsible for contract performance between Organizers and Sponsors.
+                          </p>
+                        </div>
+                      </ScrollArea>
+                    </DialogContent>
+                  </Dialog>
                 </>
               )}
             </form>
