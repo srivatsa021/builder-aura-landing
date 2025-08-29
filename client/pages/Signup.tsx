@@ -27,6 +27,7 @@ export default function Signup() {
     industry: "",
     website: "",
     address: "",
+    gstNumber: "",
     // Organizer fields
     clubName: "",
     collegeName: "",
@@ -61,6 +62,7 @@ export default function Signup() {
         clubName: formData.clubName,
         collegeName: formData.collegeName,
         description: formData.description,
+        gstNumber: formData.gstNumber,
       };
 
       const response = await fetch("/api/auth/signup", {
@@ -149,6 +151,16 @@ export default function Signup() {
                 placeholder="Full company address"
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gstNumber">GST Number *</Label>
+              <Input
+                id="gstNumber"
+                placeholder="15-digit GSTIN"
+                value={formData.gstNumber}
+                onChange={(e) => handleInputChange("gstNumber", e.target.value.toUpperCase())}
                 required
               />
             </div>
