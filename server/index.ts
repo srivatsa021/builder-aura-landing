@@ -44,6 +44,7 @@ import {
 import { authenticateToken } from "./middleware/auth";
 import { memoryStore } from "./database/memory-store";
 import { createDefaultAgent } from "./database/default-agent";
+import { adminAuth, listPendingSponsors, approveSponsor, rejectSponsor } from "./routes/admin";
 
 export function createServer() {
   const app = express();
