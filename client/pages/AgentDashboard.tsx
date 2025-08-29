@@ -167,7 +167,7 @@ export default function AgentDashboard() {
   const enrichEventWithOrganizerDetails = async (event: any) => {
     // If organizer details are missing, fetch them
     if (!event.organizer?.email || !event.organizer?.phone || !event.organizer?.name) {
-      console.log("��� Fetching missing organizer details for event:", event._id);
+      console.log("🔍 Fetching missing organizer details for event:", event._id);
       const organizerDetails = await fetchOrganizerDetails(event.organizer?._id || event.organizer);
       if (organizerDetails) {
         event.organizer = {
@@ -629,32 +629,36 @@ export default function AgentDashboard() {
                           {pkg.interestedSponsors?.length ? (
                             <div className="space-y-3">
                               <h5 className="font-medium text-sm">Interested Sponsors:</h5>
-                              {pkg.interestedSponsors.map((sponsor: any) => (
-                                <div key={sponsor._id} className="bg-background p-3 rounded border">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                    <div>
-                                      <p className="text-sm text-muted-foreground">Name</p>
-                                      <p className="font-medium">{sponsor.name || "N/A"}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm text-muted-foreground">Company</p>
-                                      <p className="font-medium">{sponsor.companyName || "N/A"}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm text-muted-foreground">Email</p>
-                                      <p className="font-medium">{sponsor.email || "N/A"}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm text-muted-foreground">Phone</p>
-                                      <p className="font-medium">{sponsor.phone || "N/A"}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm text-muted-foreground">Industry</p>
-                                      <p className="font-medium">{sponsor.industry || "N/A"}</p>
+                              {pkg.interestedSponsors.map((sponsor: any, idx: number) => {
+                                const sponsorObj = typeof sponsor === "string" ? null : sponsor;
+                                const sponsorKey = typeof sponsor === "string" ? sponsor : sponsor?._id || sponsor?.email || `${idx}`;
+                                return (
+                                  <div key={sponsorKey} className="bg-background p-3 rounded border">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">Name</p>
+                                        <p className="font-medium">{sponsorObj?.name || "N/A"}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">Company</p>
+                                        <p className="font-medium">{sponsorObj?.companyName || "N/A"}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">Email</p>
+                                        <p className="font-medium">{sponsorObj?.email || "N/A"}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">Phone</p>
+                                        <p className="font-medium">{sponsorObj?.phone || "N/A"}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">Industry</p>
+                                        <p className="font-medium">{sponsorObj?.industry || "N/A"}</p>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                   </div>
                           ) : (
                             <p className="text-muted-foreground">No sponsors interested in this package yet.</p>
