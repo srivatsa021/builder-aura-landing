@@ -230,7 +230,7 @@ export const handleSignup: RequestHandler = async (req, res) => {
       // Use memory store fallback
       console.log("💾 Using memory store for signup (MongoDB not connected)");
 
-      // Check if user already exists
+      // Check if user already exists (active)
       const existingUser = await memoryStore.findUserByEmail(email);
       if (existingUser) {
         const response: AuthResponse = {
@@ -244,7 +244,29 @@ export const handleSignup: RequestHandler = async (req, res) => {
       const salt = await bcrypt.genSalt(12);
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      // Create new user
+      if (role === "sponsor") {
+        // Create sponsor application (pending approval)
+        await memoryStore.createSponsorApplication({
+          email: email.toLowerCase(),
+          passwordHash: hashedPassword,
+          name,
+          phone,
+          role: "sponsor",
+          companyName: userData.companyName!,
+          industry: userData.industry!,
+          website: userData.website,
+          address: userData.address!,
+          gstNumber: userData.gstNumber || "",
+        });
+
+        return res.status(201).json({
+          success: true,
+          message:
+            "Your application has been submitted. An admin will review and approve your profile shortly.",
+        });
+      }
+
+      // Non-sponsor users are created immediately
       const newUser = await memoryStore.createUser({
         email: email.toLowerCase(),
         password: hashedPassword,
@@ -261,7 +283,6 @@ export const handleSignup: RequestHandler = async (req, res) => {
         description: userData.description,
       });
 
-      // Generate JWT token
       const mockUser = {
         _id: newUser._id,
         email: newUser.email,
