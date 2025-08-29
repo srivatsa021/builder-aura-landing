@@ -376,7 +376,7 @@ export default function Signup() {
                       <DialogHeader className="px-6 pt-6">
                         <DialogTitle>Terms & Conditions</DialogTitle>
                       </DialogHeader>
-                      <ScrollArea className="px-6 pb-6">
+                      <ScrollArea className="h-[70vh] px-6 pb-6">
                         <div className="space-y-4 text-sm text-foreground/90">
                           <p>
                             These Terms & Conditions ("Terms") govern the use of the SponsorHub platform by
@@ -400,6 +400,11 @@ export default function Signup() {
                               Payments & Finances: Payment schedules, amounts, and refunds (if any) are governed by
                               the agreement between the Organizer and Sponsor. SponsorHub is not a party to such
                               agreements unless expressly stated in writing.
+                            </li>
+                            <li>
+                              Commission Model: SponsorHub operates on a commission-based model and charges a
+                              commission on each successful deal between an Organizer and Sponsor. Commission
+                              structure and applicable rates will be shared prior to confirmation of the deal.
                             </li>
                             <li>
                               Disputes & Legal Action: If deliverables or finances are not fulfilled, both parties
