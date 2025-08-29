@@ -296,7 +296,30 @@ export const handleGetEventPackages: RequestHandler = async (req: any, res) => {
       // Add interest status and deal info for current user if they're a sponsor
       const packagesWithInterestStatus = await Promise.all(
         packages.map(async (pkg) => {
-          const pkgObj = { ...pkg };
+          const pkgObj: any = { ...pkg };
+
+          // Enrich interested sponsors with user details
+          try {
+            const detailedSponsors = await Promise.all(
+              (pkg.interestedSponsors || []).map(async (sid: string) => {
+                const user = await memoryStore.findUserById(sid);
+                return user
+                  ? {
+                      _id: user._id,
+                      name: user.name,
+                      email: user.email,
+                      phone: user.phone,
+                      companyName: user.companyName,
+                      industry: user.industry,
+                    }
+                  : { _id: sid };
+              }),
+            );
+            pkgObj.interestedSponsors = detailedSponsors;
+          } catch (e) {
+            console.error("Error enriching interested sponsors:", e);
+          }
+
           if (req.user && req.user.role === "sponsor") {
             console.log(
               `💾 Checking interest for sponsor ${req.user.userId} in package ${pkg._id}`,
