@@ -73,6 +73,7 @@ export default function AgentDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<any | null>(null);
   const [eventToDelete, setEventToDelete] = useState<any | null>(null);
+  const [pendingSponsors, setPendingSponsors] = useState<any[]>([]);
 
   useEffect(() => {
     // Get user info
@@ -83,6 +84,7 @@ export default function AgentDashboard() {
 
     // Load all events
     loadAllEvents();
+    loadPendingSponsors();
   }, []);
 
   const loadAllEvents = async () => {
@@ -165,7 +167,7 @@ export default function AgentDashboard() {
   const enrichEventWithOrganizerDetails = async (event: any) => {
     // If organizer details are missing, fetch them
     if (!event.organizer?.email || !event.organizer?.phone || !event.organizer?.name) {
-      console.log("🔍 Fetching missing organizer details for event:", event._id);
+      console.log("��� Fetching missing organizer details for event:", event._id);
       const organizerDetails = await fetchOrganizerDetails(event.organizer?._id || event.organizer);
       if (organizerDetails) {
         event.organizer = {
@@ -208,6 +210,57 @@ export default function AgentDashboard() {
       cancelled: "bg-red-500",
     };
     return colors[status as keyof typeof colors] || "bg-gray-500";
+  };
+
+  const loadPendingSponsors = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/admin/sponsors/pending", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setPendingSponsors(data.applications || []);
+    } catch (e) {
+      console.error("Failed to load pending sponsors", e);
+    }
+  };
+
+  const approveSponsorApp = async (id: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/admin/sponsors/${id}/approve`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Sponsor approved.");
+        loadPendingSponsors();
+      } else {
+        alert(data.message || "Approval failed");
+      }
+    } catch (e) {
+      alert("Approval failed");
+    }
+  };
+
+  const rejectSponsorApp = async (id: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/admin/sponsors/${id}/reject`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Sponsor rejected.");
+        loadPendingSponsors();
+      } else {
+        alert(data.message || "Rejection failed");
+      }
+    } catch (e) {
+      alert("Rejection failed");
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -358,6 +411,9 @@ export default function AgentDashboard() {
             <TabsTrigger value="with-interest">
               <span className="flex items-center"><MessageCircle className="h-4 w-4 mr-1" /> EVENTS WITH INTEREST ({eventsWithInterest.length})</span>
             </TabsTrigger>
+            <TabsTrigger value="pending-sponsors">
+              <span className="flex items-center"><Building2 className="h-4 w-4 mr-1" /> PENDING SPONSORS ({pendingSponsors.length})</span>
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="all">
             <div className="overflow-x-auto rounded-lg bg-card p-4">
@@ -458,6 +514,46 @@ export default function AgentDashboard() {
                         </tr>
                       );
                     })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </TabsContent>
+          <TabsContent value="pending-sponsors">
+            <div className="overflow-x-auto rounded-lg bg-card p-4">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left border-b border-muted-foreground">
+                    <th className="py-2 px-3">Company</th>
+                    <th className="py-2 px-3">GST</th>
+                    <th className="py-2 px-3">Contact</th>
+                    <th className="py-2 px-3">Industry</th>
+                    <th className="py-2 px-3">Submitted</th>
+                    <th className="py-2 px-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingSponsors.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-8 text-muted-foreground">No pending applications</td>
+                    </tr>
+                  ) : (
+                    pendingSponsors.map((app) => (
+                      <tr key={app.id} className="border-b border-muted-foreground hover:bg-muted/30">
+                        <td className="py-2 px-3">
+                          <div className="font-medium">{app.companyName}</div>
+                          <div className="text-xs text-muted-foreground">{app.name} • {app.email}</div>
+                        </td>
+                        <td className="py-2 px-3">{app.gstNumber}</td>
+                        <td className="py-2 px-3">{app.phone}</td>
+                        <td className="py-2 px-3">{app.industry}</td>
+                        <td className="py-2 px-3">{new Date(app.submittedAt).toLocaleString()}</td>
+                        <td className="py-2 px-3 flex gap-2">
+                          <button className="px-2 py-1 rounded bg-green-600 text-white" onClick={() => approveSponsorApp(app.id)}>Approve</button>
+                          <button className="px-2 py-1 rounded bg-red-600 text-white" onClick={() => rejectSponsorApp(app.id)}>Reject</button>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
