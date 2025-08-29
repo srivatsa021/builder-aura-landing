@@ -172,6 +172,11 @@ export function createServer() {
   // Sponsor interest routes
   app.get("/api/sponsors/all", authenticateToken, handleGetAllSponsors);
 
+  // Admin routes
+  app.get("/api/admin/sponsors/pending", ...adminAuth, listPendingSponsors);
+  app.post("/api/admin/sponsors/:applicationId/approve", ...adminAuth, approveSponsor);
+  app.post("/api/admin/sponsors/:applicationId/reject", ...adminAuth, rejectSponsor);
+
   // Health check with database status
   app.get("/api/health", async (_req, res) => {
     try {
