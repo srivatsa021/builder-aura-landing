@@ -17,18 +17,16 @@ export default function Login() {
   const [selectedRole, setSelectedRole] = useState<UserRole>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [gstNumber, setGstNumber] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRole) return;
 
     try {
-      const loginData: any = {
+      const loginData = {
         email,
         password,
         role: selectedRole,
-        ...(selectedRole === "sponsor" ? { gstNumber } : {}),
       };
 
       const response = await fetch("/api/auth/login", {
@@ -148,19 +146,6 @@ export default function Login() {
                   required
                 />
               </div>
-
-              {/* GST Number (Sponsor only) */}
-              {selectedRole === "sponsor" && (
-                <div className="space-y-2">
-                  <Label htmlFor="gstNumber">GST Number</Label>
-                  <Input
-                    id="gstNumber"
-                    placeholder="15-digit GSTIN"
-                    value={gstNumber}
-                    onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
-                  />
-                </div>
-              )}
 
               {/* Submit */}
               <Button type="submit" className="w-full" disabled={!selectedRole}>
