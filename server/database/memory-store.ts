@@ -15,6 +15,7 @@ interface User {
   industry?: string;
   website?: string;
   address?: string;
+  gstNumber?: string;
 
   // Organizer fields
   clubName?: string;
@@ -22,12 +23,34 @@ interface User {
   description?: string;
 }
 
+interface SponsorApplication {
+  id: string;
+  email: string;
+  passwordHash: string;
+  name: string;
+  phone: string;
+  role: "sponsor";
+  companyName: string;
+  industry: string;
+  website?: string;
+  address: string;
+  gstNumber: string;
+  status: "pending" | "approved" | "rejected";
+  submittedAt: Date;
+}
+
 class MemoryStore {
   private users: Map<string, User> = new Map();
+  private applications: Map<string, SponsorApplication> = new Map();
   private idCounter = 1;
+  private appCounter = 1;
 
   generateId(): string {
     return `user_${this.idCounter++}`;
+  }
+
+  generateAppId(): string {
+    return `app_${this.appCounter++}`;
   }
 
   async createUser(
@@ -80,6 +103,56 @@ class MemoryStore {
           .length,
       },
     };
+  }
+
+  // Sponsor application methods
+  async createSponsorApplication(app: Omit<SponsorApplication, "id" | "status" | "submittedAt">): Promise<SponsorApplication> {
+    const id = this.generateAppId();
+    const application: SponsorApplication = {
+      ...app,
+      id,
+      status: "pending",
+      submittedAt: new Date(),
+    };
+    this.applications.set(id, application);
+    console.log(`💾 [MemoryStore] Created sponsor application: ${app.email}`);
+    return application;
+  }
+
+  async listPendingSponsorApplications(): Promise<SponsorApplication[]> {
+    return Array.from(this.applications.values()).filter((a) => a.status === "pending");
+  }
+
+  async getSponsorApplicationById(id: string): Promise<SponsorApplication | null> {
+    return this.applications.get(id) || null;
+  }
+
+  async approveSponsorApplication(id: string): Promise<User | null> {
+    const app = this.applications.get(id);
+    if (!app || app.status !== "pending") return null;
+    app.status = "approved";
+
+    const user = await this.createUser({
+      email: app.email,
+      password: app.passwordHash,
+      name: app.name,
+      phone: app.phone,
+      role: "sponsor",
+      isActive: true,
+      companyName: app.companyName,
+      industry: app.industry,
+      website: app.website,
+      address: app.address,
+      gstNumber: app.gstNumber,
+    });
+    return user;
+  }
+
+  async rejectSponsorApplication(id: string): Promise<boolean> {
+    const app = this.applications.get(id);
+    if (!app || app.status !== "pending") return false;
+    app.status = "rejected";
+    return true;
   }
 }
 
