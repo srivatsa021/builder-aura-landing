@@ -76,18 +76,23 @@ export default function Signup() {
       const result = await response.json();
 
       if (result.success) {
-        // Store token in localStorage
+        if (selectedRole === "sponsor") {
+          alert(
+            result.message ||
+              "Thank you! Your sponsor profile request was submitted. Your profile will be created shortly after admin approval.",
+          );
+          window.location.href = "/login";
+          return;
+        }
+
+        // For non-sponsor roles, proceed with normal login flow
         if (result.token) {
           localStorage.setItem("token", result.token);
           localStorage.setItem("user", JSON.stringify(result.user));
         }
 
         alert("Account created successfully! Welcome to SponsorHub!");
-        // Redirect to appropriate dashboard based on role
         switch (selectedRole) {
-          case "sponsor":
-            window.location.href = "/sponsor-dashboard";
-            break;
           case "organizer":
             window.location.href = "/organizer-dashboard";
             break;
